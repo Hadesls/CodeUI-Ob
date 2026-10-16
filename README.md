@@ -36,8 +36,6 @@
 
 ### 深色模式：自动适配
 
-![引用块与表格在浅色 / 深色模式下的对比](docs/dark-mode-preview.png)
-
 - **代码块不跟随明暗** —— 它自带 9 套配色，永远是深色卡片，两种模式长得一样（刻意如此）。
 - **引用块 / 表格 / 行内代码 / 分割线跟随明暗**：这些"画了背景色"的地方，深色下改用**半透明叠色**，跟着背景走，不会出现"暗界面上一块亮色"。
 - 你选的是**色相**（浅蓝 / 暖金 / 青绿…），不是"浅色模式专用的浅蓝"。切到深色，它自动换成同一色相的深色版本，不用手动改设置。
@@ -161,8 +159,7 @@ Code-UI/
 │     └─ overlay.src.css      ← 覆盖层源码（改样式改这里）
 ├─ docs/                      ← README 里的配图
 │  ├─ preview-overview.png
-│  ├─ preview-themes.png
-│  └─ dark-mode-preview.png
+│  └─ preview-themes.png
 └─ theme-src/                 ← 主题重建原料（只给"要改主题"的人用）
    ├─ base-Blue-Topaz.css     ← Blue Topaz 底子（原样留档，别再动它）
    └─ rebuild-theme.py        ← 一键重合并：底子 + overlay.src.css → theme.css
