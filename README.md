@@ -57,7 +57,7 @@ cd CodeUI-Ob
 VAULT="/path/to/你的vault"
 mkdir -p "$VAULT/.obsidian/plugins" "$VAULT/.obsidian/themes"
 cp -R hadesr-code        "$VAULT/.obsidian/plugins/hadesr-code"
-cp -R "themes/Hadesr UI" "$VAULT/.obsidian/themes/Hadesr UI"
+cp -R "Hadesr UI"        "$VAULT/.obsidian/themes/Hadesr UI"
 ```
 
 > 就两条 `cp`，没有安装脚本 —— 插件和主题本来就是「文件夹放对位置」而已。
@@ -135,7 +135,7 @@ cd CodeUI-Ob
 git pull
 VAULT="/path/to/你的vault"
 cp -R hadesr-code/.        "$VAULT/.obsidian/plugins/hadesr-code/"
-cp -R "themes/Hadesr UI/." "$VAULT/.obsidian/themes/Hadesr UI/"
+cp -R "Hadesr UI/."        "$VAULT/.obsidian/themes/Hadesr UI/"
 ```
 
 > **为什么是「覆盖」而不是「删了重拷」**：结尾那个 `/.` 表示"拷贝目录**内容**进目标目录"，
@@ -162,11 +162,10 @@ Code-UI/
 │  ├─ versions.json
 │  └─ tools/
 │     └─ static-check.js      ← 改完 main.js 跑一下：确认 this.* 调用的方法都有定义
-├─ themes/
-│  └─ Hadesr UI/              ← 主题
-│     ├─ manifest.json
-│     ├─ theme.css            ← 成品（底子 + 覆盖层合并，约 1.29 MB）
-│     └─ overlay.src.css      ← 覆盖层源码（改样式改这里）
+├─ Hadesr UI/                 ← 主题（= Obsidian 主题目录里的内容）
+│  ├─ manifest.json
+│  ├─ theme.css               ← 成品（底子 + 覆盖层合并，约 1.29 MB）
+│  └─ overlay.src.css         ← 覆盖层源码（改样式改这里）
 ├─ docs/                      ← README 里的配图
 │  ├─ preview-overview.png
 │  └─ preview-themes.png
@@ -174,6 +173,11 @@ Code-UI/
    ├─ base-Blue-Topaz.css     ← Blue Topaz 底子（原样留档，别再动它）
    └─ rebuild-theme.py        ← 一键重合并：底子 + overlay.src.css → theme.css
 ```
+
+> **仓库一级的每个文件夹 = 拷进 vault 的一份东西**：
+> `hadesr-code/` → `<vault>/.obsidian/plugins/hadesr-code/`；
+> `Hadesr UI/` → `<vault>/.obsidian/themes/Hadesr UI/`。
+> （`docs/` 与 `theme-src/` 是仓库自用，不往 vault 里拷。）
 
 > **不进仓库的东西**：插件目录里的 `data.json` —— 那是每台机器各自的设置（代码主题选择、引用块档位、表格档位、列宽记忆），由 Obsidian 自动生成。
 

@@ -21,7 +21,9 @@ import io, os, sys, json
 
 HERE = os.path.dirname(os.path.abspath(__file__))          # …/Code-UI/theme-src
 ROOT = os.path.dirname(HERE)                               # …/Code-UI
-DEF_THEME = os.path.join(ROOT, "themes", "Hadesr UI")      # 主题目录（含 overlay.src.css）
+DEF_THEME = os.path.join(ROOT, "Hadesr UI")                # 主题目录（含 overlay.src.css）
+# ↑ 主题目录就放在仓库一级（2026-10-16 从 `themes/Hadesr UI` 提出来的）——
+#   这样「仓库一级的每个文件夹 = 拷进 vault 的一份东西」，和 hadesr-code/ 对称。
 DEF_BASE = os.path.join(HERE, "base-Blue-Topaz.css")       # 底子（随仓库一起分发）
 DEF_PLUGIN_MANIFEST = os.path.join(ROOT, "hadesr-code", "manifest.json")
 SEP = "/* ↓↓↓ Hadesr UI 覆盖层 开始 ↓↓↓ */"
