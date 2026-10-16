@@ -133,6 +133,8 @@ git pull
 ./install.sh "/path/to/你的vault"     # 覆盖式安装
 ```
 
+> **你的设置不会丢**：`install.sh` 会先把插件目录里的 `data.json`（代码主题 / 引用块档位 / 表格档位 / 表格列宽记忆）备份出来，装完再放回。**直接删目录重装也可以放心。**
+
 然后在 Obsidian 里**重载**：`Ctrl/Cmd + R`，或到设置里把插件关掉再打开。
 
 > 插件版本会显示在 **设置 → Hadesr Code** 的标题上（例如 `Hadesr Code 设置 v2.25.8`）—— 一眼就能看出这台是不是旧的。
@@ -151,7 +153,9 @@ Code-UI/
 │  ├─ main.js
 │  ├─ styles.css
 │  ├─ manifest.json
-│  └─ versions.json
+│  ├─ versions.json
+│  └─ tools/
+│     └─ static-check.js      ← 改完 main.js 跑一下：确认 this.* 调用的方法都有定义
 ├─ themes/
 │  └─ Hadesr UI/              ← 主题
 │     ├─ manifest.json
