@@ -204,7 +204,8 @@ Code-UI/
 
 ```bash
 export PATH="$HOME/bin:$PATH"
-SRC="/Users/hadesr/Desktop/Code-UI" \
+cd /path/to/CodeUI-Ob                     # 仓库工作目录
+SRC="$PWD" \
 MESSAGE="feat: xxx（v2.26.0）" \
 GH_TOKEN=$(gh auth token) \
 node "$HOME/bin/push-via-api-retry.js" Hadesls/CodeUI-Ob main
