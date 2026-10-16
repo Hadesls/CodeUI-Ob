@@ -122,10 +122,25 @@ v2.23.x ~ v2.25.7 期间的改动（表格工具栏、列宽拖拽、6 档配色
 
 全面体检后修掉的问题：
 
-- **`install.sh` 数据丢失 bug（严重）** —— 脚本先 `rm -rf` 整个插件目录再拷新的，
+- **删掉 `install.sh`**（用户质疑「这脚本没啥用，删掉重拷不就行了」—— 对）。
+  它唯一的价值是顺手写好启用登记，而那在设置里点两下就完了；
+  但它内部是 `rm -rf` 整个插件目录再拷新的，**自带的坑比省下的步骤多**。
+  现在 README 改成直接给两条 `cp`：
+
+  ```bash
+  cp -R hadesr-code        "$VAULT/.obsidian/plugins/hadesr-code"
+  cp -R "themes/Hadesr UI" "$VAULT/.obsidian/themes/Hadesr UI"     # 首次安装
+  cp -R hadesr-code/.        "$VAULT/.obsidian/plugins/hadesr-code/"   # 更新（覆盖）
+  cp -R "themes/Hadesr UI/." "$VAULT/.obsidian/themes/Hadesr UI/"
+  ```
+
+  **更新用「覆盖」而不是「删了重拷」**：结尾的 `/.` 只覆盖同名文件，
+  **不会动本机的 `data.json`**（仓库里根本没这个文件）——
+  这比 `rm -rf` + 备份还原那套**更简单也更安全**。
+- **`install.sh` 曾有数据丢失 bug（现已随脚本删除而消失）** —— 它内部先 `rm -rf` 整个插件目录再拷新的，
   而 `data.json`（代码主题 / 引用块档位 / 表格档位 / 表格列宽记忆）**只存在于 vault、不在仓库里**
-  → **按 README 的更新流程走一遍，设置就被清空了**。
-  已改成：装之前先把 `data.json` 备份到临时文件，装完放回。**已用临时 vault 实测验证设置原样保留。**
+  → 按 README 的更新流程走一遍，**设置就被清空了**。中途曾用"装前备份、装完放回"修好并实测通过；
+  后来直接把脚本删了 —— 用上面的 `cp -R 来源/. 目标/` 覆盖法，压根不需要脚本。
 - **`versions.json` 版本不同步** —— 内容还是 `{"2.25.8": "1.0.0"}`，而 manifest 已到 `2.26.0`。
   已补上 `2.26.0`。
 - **`tools/static-check.js` 收进仓库** —— 这个自检工具（"改完单文件 JS 必须确认所有

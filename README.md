@@ -51,13 +51,16 @@ git clone https://github.com/Hadesls/CodeUI-Ob.git
 cd CodeUI-Ob
 ```
 
-### 2. 一键装进 vault
+### 2. 拷进 vault
 
 ```bash
-./install.sh "/path/to/你的vault"
+VAULT="/path/to/你的vault"
+mkdir -p "$VAULT/.obsidian/plugins" "$VAULT/.obsidian/themes"
+cp -R hadesr-code        "$VAULT/.obsidian/plugins/hadesr-code"
+cp -R "themes/Hadesr UI" "$VAULT/.obsidian/themes/Hadesr UI"
 ```
 
-脚本会把 `hadesr-code/` 和 `themes/Hadesr UI/` 拷进 vault，并自动写好启用登记。
+> 就两条 `cp`，没有安装脚本 —— 插件和主题本来就是「文件夹放对位置」而已。
 
 > **手机 / iOS 提示**：系统「文件」App 看不到 `.obsidian`（隐藏目录）。建议在电脑上拷好，再用同步工具（Syncthing / iCloud / WebDAV）把整个 vault 同步过去。
 
@@ -130,14 +133,19 @@ mycmd  | keyword | \b(?:foo|bar)\b
 ```bash
 cd CodeUI-Ob
 git pull
-./install.sh "/path/to/你的vault"     # 覆盖式安装
+VAULT="/path/to/你的vault"
+cp -R hadesr-code/.        "$VAULT/.obsidian/plugins/hadesr-code/"
+cp -R "themes/Hadesr UI/." "$VAULT/.obsidian/themes/Hadesr UI/"
 ```
 
-> **你的设置不会丢**：`install.sh` 会先把插件目录里的 `data.json`（代码主题 / 引用块档位 / 表格档位 / 表格列宽记忆）备份出来，装完再放回。**直接删目录重装也可以放心。**
+> **为什么是「覆盖」而不是「删了重拷」**：结尾那个 `/.` 表示"拷贝目录**内容**进目标目录"，
+> 只覆盖同名文件，**不会动你本机的 `data.json`**（代码主题 / 引用块档位 / 表格档位 / 表格列宽记忆）
+> —— 那个文件只存在于你机器上，仓库里根本没有。
+> 反过来，**先 `rm -rf` 再拷就会把设置清空**，别那么干。
 
 然后在 Obsidian 里**重载**：`Ctrl/Cmd + R`，或到设置里把插件关掉再打开。
 
-> 插件版本会显示在 **设置 → Hadesr Code** 的标题上（例如 `Hadesr Code 设置 v2.25.8`）—— 一眼就能看出这台是不是旧的。
+> 插件版本会显示在 **设置 → Hadesr Code** 的标题上（例如 `Hadesr Code 设置 v2.26.0`）—— 一眼就能看出这台是不是旧的。
 
 ---
 
@@ -147,7 +155,6 @@ git pull
 Code-UI/
 ├─ README.md                  ← 本文件
 ├─ CHANGELOG.md               ← 版本改动记录（插件 / 主题分开小节）
-├─ install.sh                 ← 一键装进目标 vault
 ├─ LICENSE                    ← MIT（含 Blue Topaz 署名）
 ├─ hadesr-code/               ← 插件本体（= Obsidian 插件目录里的内容）
 │  ├─ main.js
@@ -180,12 +187,28 @@ Code-UI/
 
 ```
 ① 在 vault 里改插件 / 主题覆盖层（就地改，马上能看到效果）
-② 升版本号（插件 manifest + 主题 manifest + overlay 抬头）
-③ 重合并主题成品（改过 overlay.src.css 才需要）：python3 rebuild-theme.py
-④ 把改动同步到本仓库目录
-⑤ git commit -m "feat: xxx（v2.25.8）" && git tag v2.25.8 && git push --tags
-⑥ 别的电脑：git pull → ./install.sh → 重载 Obsidian
+② 升版本号（插件 manifest + 主题 manifest + overlay 抬头，另加 versions.json）
+③ 重合并主题成品（改过 overlay.src.css 才需要）：python3 theme-src/rebuild-theme.py
+④ 把改动同步到本仓库目录（vault → Code-UI，单向）
+⑤ 推送：push-via-api-retry.js（见下方「怎么推」）
+⑥ 别的电脑：git pull → 两条 cp 覆盖 → 重载 Obsidian
 ```
+
+### 怎么推
+
+沙箱 / 受限网络里 `github.com` 走不通（`git push` 必 502），但 `api.github.com` 通。
+用 `gh` 拿 token，再走 REST API 推：
+
+```bash
+export PATH="$HOME/bin:$PATH"
+SRC="/Users/hadesr/Desktop/Code-UI" \
+MESSAGE="feat: xxx（v2.26.0）" \
+GH_TOKEN=$(gh auth token) \
+node "$HOME/bin/push-via-api-retry.js" Hadesls/CodeUI-Ob main
+```
+
+> `push-via-api-retry.js` 带指数退避重试（网络抖动会自动重试），
+> 且**文本文件走 utf-8 直传**（省掉 base64 的 33% 体积）。
 
 > 更细的说明（含主题"底子 + 覆盖层"的合并原理、重建步骤）见配套文档 **《Code-UI 打包与维护方案》**。
 
