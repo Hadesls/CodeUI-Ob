@@ -9,3 +9,7 @@ data.json
 *.log
 *.tmp
 *.bak
+
+# Python 字节码缓存（跑过 rebuild-theme.py 就可能生成）
+__pycache__/
+*.pyc
