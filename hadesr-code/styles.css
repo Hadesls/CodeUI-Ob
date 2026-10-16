@@ -1,0 +1,312 @@
+/* ============================================================
+ * Hadesr Code — 工具条 + ⋯菜单 + 表格工具栏样式
+ * 说明：绝不设置代码行的 font-size / line-height（会打乱 CM6 行高 → 错行）
+ * 作者: Hadesr
+ * ============================================================ */
+
+/* ---------- 工具条 ---------- */
+.cbs-bar {
+  position: fixed;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  box-sizing: border-box;
+  padding: 0 6px 0 2px;
+  border-radius: 9px 9px 0 0;
+  background: var(--cbs-head, rgba(30, 33, 39, .96));
+  color: var(--cbs-fg, #cfd4dc);
+  border: 1px solid var(--cbs-border, rgba(127, 127, 127, .3));
+  border-bottom: 1px solid var(--cbs-border, rgba(127, 127, 127, .3));
+  font-family: var(--font-interface);
+  line-height: 1;
+  user-select: none;
+  -webkit-user-select: none;
+  box-shadow: 0 6px 18px -12px rgba(0, 0, 0, .5);
+}
+
+.cbs-chev {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 20px; height: 20px;
+  margin: 0 2px;
+  padding: 0;
+  border: none; border-radius: 5px;
+  background: transparent; color: inherit;
+  cursor: pointer; opacity: .75;
+}
+.cbs-chev:hover { background: var(--cbs-sel, rgba(255, 255, 255, .14)); opacity: 1; }
+.cbs-chev svg { width: 13px; height: 13px; }
+
+/* ---------- 表格工具栏：透明浮层（无底色/边框/阴影，只留图标） ---------- */
+.cbs-tbar {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  gap: 0;
+  /* 图标颜色跟随编辑器正文，深浅主题都可读 */
+  color: var(--text-normal, #333);
+}
+.cbs-tbar .cbs-chev { opacity: .55; }
+.cbs-tbar .cbs-chev:hover { background: var(--background-modifier-hover, rgba(127, 127, 127, .15)); opacity: 1; }
+
+/* ---------- 代码卡片内部清零（CSS 兜底） ----------
+   作用：代码块插进 DOM 的那一刻就是最终形态（内边距不叠加、不虚高），
+   不必等 JS 逐节点写 inline 样式 —— 这是"首屏一片白/要加载半天"的一半原因。
+   注意：**不要用 `*` 通配后代**。超大代码块（上千行）里 `*` 会让每次样式重算
+   都去匹配上千个节点，反而更卡（踩过）。这里只点名真正需要清零的几个节点，
+   更深的节点由 JS 首次遇到时清一次（见 main.js 的 _cbsCleared）。 */
+/* ⚠ 只清零「卡片内部」的节点（pre / code），**不要把卡片本身清零**：
+   .el-pre 与裸 pre 都可能是卡片主体，清零它们会让代码贴到左边缘、格式崩（踩过）。 */
+.markdown-rendered .el-pre > pre,
+.markdown-preview-view .el-pre > pre,
+.markdown-rendered .el-pre pre,
+.markdown-preview-view .el-pre pre,
+.markdown-rendered pre > code,
+.markdown-preview-view pre > code,
+.cm-preview-code-block pre,
+.cm-preview-code-block code {
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: 0 !important;
+}
+
+/* ---------- 表格列宽拖拽手柄（表头格右缘 9px 热区） ---------- */
+.cbs-colgrip {
+  position: absolute; top: 0; right: -4px;
+  width: 9px; height: 100%;
+  cursor: col-resize; z-index: 4;
+  background: transparent;
+  user-select: none; -webkit-user-select: none;
+}
+.cbs-colgrip::after {
+  content: ''; position: absolute; left: 4px; top: 0;
+  width: 1px; height: 100%; background: transparent;
+}
+/* 有记忆宽度的表格：常显一条淡线，提示「这张表调过」（双击手柄还原） */
+.cbs-tbl-sized .cbs-colgrip::after { background: var(--background-modifier-border, rgba(127, 127, 127, .45)); }
+/* 悬停手柄：高亮加粗 */
+.cbs-colgrip:hover::after { background: var(--interactive-accent, #64b5f6); width: 2px; left: 3.5px; }
+
+.cbs-title {
+  flex: 1 1 auto;
+  min-width: 40px;
+  height: 24px;
+  margin: 0 4px;
+  padding: 0 4px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  font-family: var(--font-interface);
+  font-size: inherit;
+  outline: none;
+}
+.cbs-title::placeholder { color: currentColor; opacity: .38; }
+.cbs-title:hover { background: var(--cbs-sel, rgba(255, 255, 255, .1)); }
+.cbs-title:focus { background: var(--cbs-sel, rgba(255, 255, 255, .16)); }
+
+.cbs-right {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  flex: 0 0 auto;
+}
+
+/* 下拉 */
+.cbs-sel {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  font-family: var(--font-interface);
+  font-size: inherit;
+  height: 24px;
+  max-width: 148px;
+  padding: 0 17px 0 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  opacity: .88;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 11px) 52%, calc(100% - 7px) 52%;
+  background-size: 4px 4px, 4px 4px;
+  background-repeat: no-repeat;
+}
+.cbs-sel:hover { background-color: var(--cbs-sel, rgba(255, 255, 255, .14)); opacity: 1; }
+.cbs-sel:focus { outline: none; }
+.cbs-sel option { background: #ffffff; color: #24292f; }
+
+.cbs-sep { width: 1px; height: 16px; margin: 0 4px; background: currentColor; opacity: .2; }
+
+/* 图标按钮 */
+.cbs-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 24px; height: 24px;
+  padding: 0;
+  border: none; border-radius: 6px;
+  background: transparent; color: inherit;
+  cursor: pointer; opacity: .8;
+  transition: background .12s ease, opacity .12s ease, color .12s ease;
+}
+.cbs-btn:hover { background: var(--cbs-sel, rgba(255, 255, 255, .14)); opacity: 1; }
+.cbs-btn.cbs-ok { color: #22c55e; opacity: 1; }
+
+/* ---------- ⋯ 菜单 ---------- */
+.cbs-menu {
+  position: fixed;
+  z-index: 61;
+  min-width: 224px;
+  padding: 6px;
+  border-radius: 10px;
+  background: var(--cbs-head, #1f2228);
+  color: var(--cbs-fg, #cfd4dc);
+  border: 1px solid var(--cbs-border, rgba(127, 127, 127, .3));
+  box-shadow: 0 16px 40px -14px rgba(0, 0, 0, .6);
+  font-family: var(--font-interface);
+  font-size: 13px;
+}
+.cbs-mrow {
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 9px; border-radius: 7px; cursor: pointer;
+}
+.cbs-mrow:hover { background: var(--cbs-sel, rgba(255, 255, 255, .13)); }
+.cbs-mi { display: inline-flex; width: 15px; opacity: .65; }
+.cbs-mi svg { width: 14px; height: 14px; }
+.cbs-mt { flex: 1 1 auto; }
+.cbs-mdiv { height: 1px; margin: 5px 6px; background: currentColor; opacity: .16; }
+
+/* ---------- 主题外壳（工具条 / 菜单） ---------- */
+.cbs-bar[data-theme="one-dark-pro"], .cbs-menu[data-theme="one-dark-pro"] { --cbs-head:#21252b; --cbs-fg:#abb2bf; --cbs-border:#181a1f; --cbs-sel:rgba(255,255,255,.13); }
+.cbs-bar[data-theme="dracula"], .cbs-menu[data-theme="dracula"] { --cbs-head:#21222c; --cbs-fg:#f8f8f2; --cbs-border:#191a21; --cbs-sel:rgba(255,255,255,.13); }
+.cbs-bar[data-theme="night-owl"], .cbs-menu[data-theme="night-owl"] { --cbs-head:#01111d; --cbs-fg:#d6deeb; --cbs-border:#00101a; --cbs-sel:rgba(255,255,255,.13); }
+.cbs-bar[data-theme="nord"], .cbs-menu[data-theme="nord"] { --cbs-head:#292e39; --cbs-fg:#d8dee9; --cbs-border:#242933; --cbs-sel:rgba(255,255,255,.13); }
+.cbs-bar[data-theme="monokai"], .cbs-menu[data-theme="monokai"] { --cbs-head:#1f2018; --cbs-fg:#f8f8f2; --cbs-border:#1a1b16; --cbs-sel:rgba(255,255,255,.13); }
+.cbs-bar[data-theme="material"], .cbs-menu[data-theme="material"] { --cbs-head:#1e272c; --cbs-fg:#eeffff; --cbs-border:#1a2126; --cbs-sel:rgba(255,255,255,.13); }
+.cbs-bar[data-theme="github-dark"], .cbs-menu[data-theme="github-dark"] { --cbs-head:#161b22; --cbs-fg:#c9d1d9; --cbs-border:#30363d; --cbs-sel:rgba(255,255,255,.13); }
+.cbs-bar[data-theme="github-light"], .cbs-menu[data-theme="github-light"] { --cbs-head:#eef1f4; --cbs-fg:#24292e; --cbs-border:#d0d7de; --cbs-sel:rgba(0,0,0,.07); }
+.cbs-bar[data-theme="solarized-dark"], .cbs-menu[data-theme="solarized-dark"] { --cbs-head:#00252e; --cbs-fg:#93a1a1; --cbs-border:#002028; --cbs-sel:rgba(255,255,255,.13); }
+.cbs-bar[data-theme="solarized-light"], .cbs-menu[data-theme="solarized-light"] { --cbs-head:#f2ebd6; --cbs-fg:#657b83; --cbs-border:#e3dbc4; --cbs-sel:rgba(0,0,0,.07); }
+.cbs-bar[data-theme="yuque-dark"], .cbs-menu[data-theme="yuque-dark"] { --cbs-head:#171717; --cbs-fg:#d4d4d4; --cbs-border:#2a2a2a; --cbs-sel:rgba(255,255,255,.13); }
+.cbs-bar[data-theme="yuque-light"], .cbs-menu[data-theme="yuque-light"] { --cbs-head:#ebecee; --cbs-fg:#24292f; --cbs-border:#e2e5e8; --cbs-sel:rgba(0,0,0,.07); }
+
+/* ---------- 「隐藏全部标题栏」后的恢复按钮（右下角常驻） ---------- */
+.cbs-chip {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 62;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 13px;
+  border: 1px solid var(--background-modifier-border, rgba(127, 127, 127, .3));
+  border-radius: 999px;
+  background: var(--background-secondary, #2a2e35);
+  color: var(--text-normal, #ddd);
+  font-family: var(--font-interface);
+  font-size: 12.5px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 8px 24px -10px rgba(0, 0, 0, .5);
+}
+.cbs-chip:hover { border-color: var(--interactive-accent, #2f7bff); }
+.cbs-chip svg { width: 14px; height: 14px; opacity: .75; }
+
+/* ---------- 工具条左侧的「N 行」 ---------- */
+.cbs-lc {
+  flex: 1 1 auto;
+  padding-left: 9px;
+  font-size: .92em;
+  opacity: .45;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- 阅读 / 实时预览 视图的代码块行号（编辑态用 CSS 计数器，这里只能 JS 拆行） ----------
+   用 block + 行内 gutter（不用 flex，避免在阅读管线里触发滚动条/布局副作用）。
+   注意：阅读管线会对卡片内所有后代强制 padding/margin/min-height:0 !important，
+   所以这里只用 width + border 做列宽和分隔线，不依赖 padding/margin。 */
+/* 阅读/预览态行号（CSS 计数器版：每行只建 1 个 span，见 main.js 的 applyReadingLN） */
+.markdown-rendered pre code,
+.markdown-preview-view pre code,
+.cm-preview-code-block pre code { counter-reset: cbsrln; }
+/* v2.25.2 定稿：行号独立一列、数字居中、竖线。
+   「列宽 + 右间隔」= 2.2em + 1.55em = 3.75em。旧版是 2.6em + .7em = 3.3em；
+   这里加长的 0.45em 是为了抵消卡片 padding-left 从 8px 收到 4px（见 main.js 的
+   applyReadingTheme）——两者相抵，**代码本身的位置和边距完全没变**，
+   只是数字在自己的列里更靠左、更居中（用户要求：离左侧边窄一点、那一列居中、别动代码边距）。 */
+.cbs-rln::before {
+  counter-increment: cbsrln;
+  content: counter(cbsrln);
+  display: inline-block;
+  width: 2.2em;
+  margin-right: 1.55em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  opacity: .4;
+  border-right: 1px solid rgba(128, 128, 128, .28);
+}
+/* Prism token 不需要内边距（替代原来"逐后代写 inline"的 Java 循环，一条规则搞定） */
+.markdown-rendered pre code .token,
+.markdown-preview-view pre code .token,
+.cm-preview-code-block code .token { padding: 0 !important; margin: 0 !important; min-height: 0 !important; }
+
+.cbs-rln { display: block; box-sizing: border-box; white-space: pre; }
+.cbs-rln-g {
+  display: inline-block; width: 1.8em; box-sizing: border-box; text-align: center;
+  border-right: 1px solid rgba(128, 128, 128, .28);
+  opacity: .4; user-select: none; -webkit-user-select: none; pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+/* 边框与代码之间的间隔（阅读管线会清零 padding/margin，只能用宽度型间隔条） */
+.cbs-rln-sp { display: inline-block; width: .6em; }
+.cbs-rln-c { display: inline; white-space: pre; }
+
+/* 我们自己的「语言标记 = 复制」胶囊（阅读/实时预览卡片，右上角；点它即复制）。
+   v2.17.3：用户换回默认主题（Blue Topaz 那个 pre::before 标签已不存在），复制回到右侧、用语言名做标签。 */
+.cbs-flair {
+  position: absolute; top: 4px; right: 6px; z-index: 3;
+  padding: 1px 8px; border-radius: 999px;
+  border: 1px solid var(--cbs-border, rgba(127, 127, 127, .35));
+  background: rgba(0, 0, 0, .22);
+  color: currentColor;
+  font-family: var(--font-interface); font-size: 11px; line-height: 1.5;
+  cursor: pointer; user-select: none; -webkit-user-select: none;
+  /* 平时隐藏，鼠标移到代码块上才浮现（更美观；点击仍可复制） */
+  opacity: 0; pointer-events: none;
+  transition: opacity .15s ease;
+}
+/* 悬停代码块卡片（flair 的父容器：阅读态 .el-pre / 实时预览 .cm-preview-code-block / pre）时显示 */
+:is(.el-pre, .cm-preview-code-block, pre, .markdown-rendered .el-pre):hover > .cbs-flair,
+.cbs-flair:hover {
+  opacity: .85; pointer-events: auto;
+}
+.cbs-flair:hover { opacity: 1; }
+
+/* 上一版（v2.17.2）的左上角复制图标按钮：彻底隐藏兜底（JS 也会移除遗留节点） */
+.cbs-copy { display: none !important; }
+
+/* 隐藏 Obsidian 原生语言角标（.code-block-flair，只存在于实时预览）——
+   只留我们自建的「语言名胶囊 .cbs-flair」，避免右上角重复。 */
+.markdown-source-view.mod-cm6 .code-block-flair,
+.markdown-source-view .code-block-flair,
+.markdown-preview-view .code-block-flair,
+.markdown-rendered .code-block-flair,
+.markdown-reading-view .code-block-flair,
+.markdown-preview-view pre + .code-block-flair,
+.markdown-rendered pre ~ .code-block-flair { display: none !important; }
+
+/* 隐藏原生复制按钮 / 编辑铅笔（白色小圆条）——CSS 全局兜底，防止宿主重绘时又冒出来 */
+.markdown-preview-view button.copy-code-button,
+.markdown-rendered button.copy-code-button,
+.markdown-source-view button.copy-code-button,
+.markdown-source-view .edit-block-button,
+.markdown-preview-view .edit-block-button { display: none !important; }

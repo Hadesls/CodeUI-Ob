@@ -1,0 +1,300 @@
+/* ============================================================================
+   Hadesr UI —— 覆盖层源码（overlay source）     本文件不被 Obsidian 加载
+   ----------------------------------------------------------------------------
+   成品关系：   theme.css  =  文件头  +  Blue Topaz theme.css  +  本文件内容
+   Obsidian 只读同目录的 theme.css 与 manifest.json，因此本文件可安心留在这里，
+   随主题文件夹一起被拷到别的电脑 —— 改外观就改本文件，改完按下面命令重合并。
+   ----------------------------------------------------------------------------
+   ★ 与插件的绑定关系（Hadesr Code v2.25.8+，两件套请一起拷贝、联动使用）
+     · 本主题提供「结构」：引用块 4px 竖条（blockquote::before）、粉底、段落级强制换行、
+       引用内列表缩进、行内代码红字灰底、分割线细线、任务清单已完成项删除线、
+       去掉底子主题的代码块装饰。
+     · 插件提供「换色」：「设置 → 外观样式 → 引用块颜色」5 档（暖金 / 浅蓝 / 青绿 /
+       珊瑚红 / 暖灰），通过 --blockquote-border-color 与门控 CSS 覆盖本主题默认色。
+     · 只装主题、不装插件 → 引用块颜色固定为默认档，无法切换（下拉由插件提供）。
+     · 只装插件、不装主题 → 阅读视图引用块没有竖条可上色（那条 ::before 由本主题画）。
+   ----------------------------------------------------------------------------
+   重合并命令（改完本文件后执行）—— 用仓库里的工具，别手写切分脚本：
+
+     python3 <仓库>/theme-src/rebuild-theme.py
+
+   工具按**自身所在位置**推算仓库根，从仓库内的底子原件
+   （theme-src/base-Blue-Topaz.css）重新完整拼一遍 ——
+   每次输出都由同一套确定输入算出，不依赖 theme.css 的现状，也不依赖任何桌面目录。
+   ⚠ 不要写"按首行标记切一刀再拼"的脚本：底子主题的第一行同样是 `/* =====…`，
+     切点会命中 index 0 → theme.css 被截成只剩覆盖层（2026-10-16 真踩过）。
+
+   校验：脚本重建时会自检花括号配平（当前 底子 3409 + 覆盖 66 = 3475），
+        重载 Obsidian 目视确认即可。
+   ============================================================================ */
+
+/* ============================================================
+   Hadesr UI  v1.4.0     配套插件：Hadesr Code v2.25.8+
+   ------------------------------------------------------------
+   覆盖内容：
+   1) 去掉底子主题自带的代码块装饰（语言标签 / 边框 / 阴影），交给插件
+   2) 引用块：粉底 + 左侧 4px 竖条 + 强制换行（颜色由插件下拉控制，见上方绑定说明）
+   3) 行内代码：红字 + 灰底（主题独有，插件无此项控件）
+   4) 分割线：细灰线（主题独有）
+   5) 任务清单：已完成项（`- [x]`）加删除线（v1.4.0 从独立 CSS 片段并入主题）
+   ============================================================ */
+
+/* ---------- 1) 代码块：去掉主题装饰，避免与 Hadesr Code 冲突 ---------- */
+/* 语言大写标签（pre::before 伪元素，Blue Topaz 15060 起） */
+body:not(.remove-language-type) pre::before,
+.markdown-rendered pre::before,
+.markdown-preview-view pre::before {
+  content: none !important;
+}
+/* 代码块外框装饰：边框/阴影去掉（底色与圆角仍由 Hadesr Code 控制，这里不碰 background） */
+.markdown-rendered pre,
+.markdown-preview-view pre,
+.markdown-source-view.mod-cm6 .cm-preview-code-block {
+  border: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+/* ---------- 2) 引用块：Drake 粉底 + 左侧 4px 竖条 ----------
+   竖条颜色由 Hadesr Code「设置 → 外观样式 → 引用块颜色」下拉控制
+   （插件注入 body.cs-qbar-* 门控 CSS 覆盖这里的默认色，这里只画条）。 */
+.markdown-rendered blockquote,
+.markdown-preview-view blockquote {
+  background-color: #fdefee !important;
+  border-left: none !important;
+  border-radius: 2px;
+  padding: 10px 16px !important;
+  color: #333333 !important;
+  position: relative;
+  margin-inline-start: 0 !important;
+  margin-inline-end: 0 !important;
+  white-space: normal;
+}
+/* 强制换行只加在段落 p 上：p 的文本里保留源文件的 \n，pre-wrap 照源断行；
+   blockquote 整体不能开 pre-wrap —— 否则 ul/li 等标签之间的空白文本节点
+   也会被渲染成真实空行 → 列表类引用块间隙爆炸。 */
+.markdown-rendered blockquote > p,
+.markdown-preview-view blockquote > p {
+  white-space: pre-wrap;
+  margin: 0 0 .3em 0 !important;
+}
+.markdown-rendered blockquote > p:last-child,
+.markdown-preview-view blockquote > p:last-child {
+  margin-bottom: 0 !important;
+}
+.markdown-rendered blockquote ul,
+.markdown-preview-view blockquote ul,
+.markdown-rendered blockquote ol,
+.markdown-preview-view blockquote ol {
+  margin: .3em 0;
+  /* 列表必须保留左缩进：否则圆点贴到 blockquote 左缘、压在 4px 红条上 */
+  padding-inline-start: 1.6em !important;
+}
+.markdown-rendered blockquote li,
+.markdown-preview-view blockquote li {
+  margin: 0;
+}
+.markdown-rendered blockquote::before,
+.markdown-preview-view blockquote::before {
+  content: '' !important;
+  display: block;
+  position: absolute;
+  width: 4px;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background-color: #d99a2b;
+  border-radius: 2px;
+}
+/* 引用块内部的行内代码保持红字 + 灰底（不被引用块粉底带偏） */
+.markdown-rendered blockquote :not(pre) > code,
+.markdown-preview-view blockquote :not(pre) > code {
+  background: rgba(127, 127, 127, 0.14) !important;
+  color: #d63200 !important;
+}
+/* 编辑视图（实时预览）的引用行：粉底（编辑页换行本来就正常，不用处理） */
+.markdown-source-view.mod-cm6 .HyperMD-quote {
+  background-color: #fdefee !important;
+  color: #333333 !important;
+}
+
+/* ---------- 3) 行内代码：Drake 红字 + 灰色底纹 ---------- */
+.markdown-rendered :not(pre) > code,
+.markdown-preview-view :not(pre) > code {
+  background: rgba(127, 127, 127, 0.14) !important;
+  border: none !important;
+  color: #d63200 !important;
+  margin: 0 2px;
+  padding: 2px 5px !important;
+  border-radius: 4px;
+  font-weight: inherit;
+}
+/* 编辑视图行内代码 */
+.markdown-source-view.mod-cm6 .cm-inline-code {
+  background: rgba(127, 127, 127, 0.14) !important;
+  color: #d63200 !important;
+  border-radius: 4px;
+}
+.markdown-source-view.mod-cm6 .cm-inline-code .cm-hmd-inline-code {
+  color: #d63200 !important;
+}
+
+/* ---------- 4) 分割线：Drake 细线 ---------- */
+.markdown-rendered hr,
+.markdown-preview-view hr {
+  border: none !important;
+  border-top: 1px solid rgba(39, 56, 73, 0.45) !important;
+  background: none !important;
+  height: 0 !important;
+  margin: 1.5em 0;
+}
+.markdown-source-view.mod-cm6 .cm-hr {
+  color: rgba(39, 56, 73, 0.45) !important;
+}
+
+/* ---------- 5) 任务清单：已完成项加删除线 ----------
+   勾选完成的任务（`- [x]`）在【阅读视图】与【实时预览】里都显示划线；
+   未完成的 `- [ ]` 不受影响。
+   ★ 这条**原先是一个独立 CSS 片段**（.obsidian/snippets/task-strikethrough.css），
+     现并入主题 —— 目的是「只维护主题一件事」：换电脑 / 给别人时不必再单独拷片段，
+     也不会出现"装了主题却没有删除线"的错位。
+   想改划线颜色：改下面的 --ts-line-color（默认跟"已完成的灰字"同色；
+   想更醒目可写 #f1b024 之类）。 */
+body {
+  --ts-line-color: var(--text-faint);
+}
+/* 阅读视图：Obsidian 把已完成任务渲染成 li.task-list-item[data-task="x"] */
+li.task-list-item[data-task="x"],
+li.task-list-item[data-task="X"],
+/* 实时预览 / 源码模式：渲染成 .HyperMD-task-line[data-task="x"] */
+.markdown-source-view.mod-cm6 .HyperMD-task-line[data-task="x"],
+.markdown-source-view.mod-cm6 .HyperMD-task-line[data-task="X"] {
+  text-decoration-line: line-through !important;
+  text-decoration-color: var(--ts-line-color) !important;
+}
+
+
+/* ============================================================================
+   Hadesr Code —— 代码配色（配色数据放在主题里，插件只切换 body 上的类名）
+   ----------------------------------------------------------------------------
+   为什么这样分：
+     · 插件不必再注入/重建样式表 → 更快；
+     · 配色由主题 CSS 提供 → 阅读态与编辑态吃同一份变量，天然一致、不会互相打架。
+   用法：插件「代码主题」下拉 = 在 body 上切换 `cbs-code-theme-<id>` 类；
+        选「跟随主题」= 不加任何该类 → 用底子主题自带配色。
+   标记：`--cbs-code-ct: 1` 告诉插件"本主题已提供配色"，插件据此决定是否自己兜底注入。
+   ============================================================================ */
+
+/* 默认配色 = 用户当前选择（monokai）。插件关闭/未加载时，代码块就用这套；
+   插件在时由 body.cbs-code-theme-<id> 覆盖。想换默认就改这一行。 */
+body { --cbs-code-ct: 1; --code-background: #272822; --background-code: #272822; --code-block-background: #272822; --code-normal: #f8f8f2; --code-head: #1f2018; --code-border: #1a1b16; --code-keyword: #f92672; --code-string: #e6db74; --code-value: #ae81ff; --code-comment: #75715e; --code-function: #a6e22e; --cbs-vr: #f8f8f2; --cbs-ty: #66d9ef; --code-operator: #f92672; --code-tag: #f92672; --cbs-at: #a6e22e; --cbs-pr: #a6e22e; --cbs-mt: #75715e; --code-important: #f92672; --code-punctuation: #f92672;  }
+
+/* ── 配色数据 ─────────────────────────────────────────────── */
+body.cbs-code-theme-one-dark-pro { --code-background: #282c34; --background-code: #282c34; --code-block-background: #282c34; --code-normal: #abb2bf; --code-head: #21252b; --code-border: #181a1f; --code-keyword: #c678dd; --code-string: #98c379; --code-value: #d19a66; --code-comment: #5c6370; --code-function: #61afef; --cbs-vr: #e06c75; --cbs-ty: #e5c07b; --code-operator: #56b6c2; --code-tag: #e06c75; --cbs-at: #d19a66; --cbs-pr: #e06c75; --cbs-mt: #61afef; --code-important: #c678dd; --code-punctuation: #56b6c2; }
+body.cbs-code-theme-dracula { --code-background: #282a36; --background-code: #282a36; --code-block-background: #282a36; --code-normal: #f8f8f2; --code-head: #21222c; --code-border: #191a21; --code-keyword: #ff79c6; --code-string: #f1fa8c; --code-value: #bd93f9; --code-comment: #6272a4; --code-function: #50fa7b; --cbs-vr: #f8f8f2; --cbs-ty: #8be9fd; --code-operator: #ff79c6; --code-tag: #ff79c6; --cbs-at: #50fa7b; --cbs-pr: #8be9fd; --cbs-mt: #f1fa8c; --code-important: #ff79c6; --code-punctuation: #ff79c6; }
+body.cbs-code-theme-night-owl { --code-background: #011627; --background-code: #011627; --code-block-background: #011627; --code-normal: #d6deeb; --code-head: #01111d; --code-border: #00101a; --code-keyword: #c792ea; --code-string: #ecc48d; --code-value: #f78c6c; --code-comment: #637777; --code-function: #82aaff; --cbs-vr: #d6deeb; --cbs-ty: #addb67; --code-operator: #7fdbca; --code-tag: #7fdbca; --cbs-at: #addb67; --cbs-pr: #80cbc4; --cbs-mt: #82aaff; --code-important: #c792ea; --code-punctuation: #7fdbca; }
+body.cbs-code-theme-monokai { --code-background: #272822; --background-code: #272822; --code-block-background: #272822; --code-normal: #f8f8f2; --code-head: #1f2018; --code-border: #1a1b16; --code-keyword: #f92672; --code-string: #e6db74; --code-value: #ae81ff; --code-comment: #75715e; --code-function: #a6e22e; --cbs-vr: #f8f8f2; --cbs-ty: #66d9ef; --code-operator: #f92672; --code-tag: #f92672; --cbs-at: #a6e22e; --cbs-pr: #a6e22e; --cbs-mt: #75715e; --code-important: #f92672; --code-punctuation: #f92672; }
+body.cbs-code-theme-material { --code-background: #263238; --background-code: #263238; --code-block-background: #263238; --code-normal: #eeffff; --code-head: #1e272c; --code-border: #1a2126; --code-keyword: #c792ea; --code-string: #c3e88d; --code-value: #f78c6c; --code-comment: #546e7a; --code-function: #82aaff; --cbs-vr: #eeffff; --cbs-ty: #ffcb6b; --code-operator: #89ddff; --code-tag: #f07178; --cbs-at: #ffcb6b; --cbs-pr: #f07178; --cbs-mt: #89ddff; --code-important: #c792ea; --code-punctuation: #89ddff; }
+body.cbs-code-theme-github-dark { --code-background: #0d1117; --background-code: #0d1117; --code-block-background: #0d1117; --code-normal: #c9d1d9; --code-head: #161b22; --code-border: #30363d; --code-keyword: #ff7b72; --code-string: #a5d6ff; --code-value: #79c0ff; --code-comment: #8b949e; --code-function: #d2a8ff; --cbs-vr: #ffa657; --cbs-ty: #ffa657; --code-operator: #ff7b72; --code-tag: #7ee787; --cbs-at: #79c0ff; --cbs-pr: #79c0ff; --cbs-mt: #8b949e; --code-important: #ff7b72; --code-punctuation: #ff7b72; }
+body.cbs-code-theme-github-light { --code-background: #f6f8fa; --background-code: #f6f8fa; --code-block-background: #f6f8fa; --code-normal: #24292e; --code-head: #eef1f4; --code-border: #d0d7de; --code-keyword: #cf222e; --code-string: #0a3069; --code-value: #0550ae; --code-comment: #6e7781; --code-function: #8250df; --cbs-vr: #953800; --cbs-ty: #953800; --code-operator: #cf222e; --code-tag: #116329; --cbs-at: #0550ae; --cbs-pr: #0550ae; --cbs-mt: #6e7781; --code-important: #cf222e; --code-punctuation: #cf222e; }
+body.cbs-code-theme-solarized-dark { --code-background: #002b36; --background-code: #002b36; --code-block-background: #002b36; --code-normal: #93a1a1; --code-head: #00252e; --code-border: #002028; --code-keyword: #859900; --code-string: #2aa198; --code-value: #d33682; --code-comment: #586e75; --code-function: #268bd2; --cbs-vr: #b58900; --cbs-ty: #b58900; --code-operator: #859900; --code-tag: #268bd2; --cbs-at: #b58900; --cbs-pr: #268bd2; --cbs-mt: #586e75; --code-important: #859900; --code-punctuation: #859900; }
+body.cbs-code-theme-solarized-light { --code-background: #fdf6e3; --background-code: #fdf6e3; --code-block-background: #fdf6e3; --code-normal: #657b83; --code-head: #f2ebd6; --code-border: #e3dbc4; --code-keyword: #859900; --code-string: #2aa198; --code-value: #d33682; --code-comment: #93a1a1; --code-function: #268bd2; --cbs-vr: #b58900; --cbs-ty: #b58900; --code-operator: #859900; --code-tag: #268bd2; --cbs-at: #b58900; --cbs-pr: #268bd2; --cbs-mt: #93a1a1; --code-important: #859900; --code-punctuation: #859900; }
+
+/* ── 消费规则：把变量套到代码块上（静态，不随配色变化）────────────── */
+/* 阅读态卡片（外层容器）；内层 pre/code 透明 */
+.markdown-rendered .el-pre, .markdown-preview-view .el-pre,
+.markdown-rendered pre, .markdown-preview-view pre {
+  background: var(--code-background) !important;
+  color: var(--code-normal) !important;
+  border: none !important; border-radius: 6px; padding: 4px 16px !important;
+  box-shadow: none; margin: 1em 0; min-height: 0 !important;
+}
+.markdown-rendered .el-pre > pre, .markdown-preview-view .el-pre > pre,
+.markdown-rendered .el-pre pre, .markdown-preview-view .el-pre pre,
+.markdown-rendered pre > code, .markdown-preview-view pre > code,
+.cm-preview-code-block pre, .cm-preview-code-block code {
+  background: transparent !important; color: var(--code-normal) !important;
+  padding: 0 !important; margin: 0 !important; min-height: 0 !important;
+  border-radius: 0 !important; box-shadow: none !important;
+}
+/* 代码块字号：让编辑态与阅读态**完全一致**（v1.3.2）。
+   Obsidian 的规则是：编辑态代码块用正文字号 --font-text-size（默认 16px），
+   阅读态代码块却用 --code-size，而它默认 = --font-smaller = 正文的 0.875 倍（≈14px）。
+   这就是「编辑 / 阅读两块字号不一样」的根因 —— 之前只给 pre 写死 16px，改不到 code 那一层。
+   治本：把 --code-size 对齐正文，再显式把 pre/code 两层都指向它。
+   好处：默认两边都 16px；用户日后调 Obsidian「字体大小」滑块时，编辑/阅读一起变，始终一致。
+   （行内代码也用 --code-size，一并统一到正文，不再显得偏小。） */
+body { --code-size: var(--font-text-size); }
+.markdown-rendered pre, .markdown-preview-view pre,
+.markdown-rendered pre code, .markdown-preview-view pre code,
+.cm-preview-code-block, .cm-preview-code-block code { font-size: var(--code-size); }
+
+/* 实时预览的代码块 widget */
+.cm-preview-code-block { background: var(--code-background) !important; color: var(--code-normal) !important;
+  border: none !important; border-radius: 6px; padding: 4px 16px !important; box-shadow: none; min-height: 0 !important; }
+/* 编辑态：代码块行 + 底色层 */
+.markdown-source-view.mod-cm6 .cm-content .cm-line.HyperMD-codeblock,
+.markdown-source-view.mod-cm6 .cm-content .cm-line.HyperMD-codeblock-bg {
+  background: var(--code-background) !important; color: var(--code-normal) !important;
+}
+.markdown-source-view.mod-cm6 .cm-content .cm-line.HyperMD-codeblock-bg::before { background: transparent !important; }
+/* ── 点击/光标所在：**灰**而不是白 ──────────────────────────────
+   原来的白色高亮会把浅色代码"洗掉"看不清；改成在代码底色上叠一层中性灰。 */
+body, .markdown-source-view.mod-cm6 {
+  --code-active-line-background-color: color-mix(in srgb, var(--code-background) 78%, #808080 22%);
+}
+.markdown-source-view.mod-cm6 .cm-content .cm-line.HyperMD-codeblock.cm-active,
+.markdown-source-view.mod-cm6 .cm-content .cm-line.HyperMD-codeblock.cm-activeLine,
+.markdown-source-view.mod-cm6 .cm-content .cm-activeLine .cm-line.HyperMD-codeblock,
+.markdown-source-view.mod-cm6 .cm-content .cm-line.cm-activeLine {
+  background: var(--code-active-line-background-color) !important;
+}
+.markdown-source-view.mod-cm6 .cm-content .cm-line.HyperMD-codeblock.cm-active::before,
+.markdown-source-view.mod-cm6 .cm-content .cm-line.HyperMD-codeblock.cm-activeLine::before { background: transparent !important; }
+/* 选中高亮：中性灰蓝，避免用 token 色（亮色代码上会刺眼） */
+.markdown-rendered pre ::selection, .markdown-preview-view pre ::selection,
+.markdown-source-view.mod-cm6 .cm-content .cm-line.HyperMD-codeblock ::selection,
+.markdown-source-view.mod-cm6 .cm-content .cm-line.HyperMD-codeblock::selection {
+  background: rgba(128, 140, 160, .38) !important; color: var(--code-normal) !important;
+}
+
+/* ── token 映射：编辑态（CM 类）*/
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock .cm-keyword, .markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock .cm-controlKeyword, .markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock .cm-modifier { color: var(--code-keyword) !important; }
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock .cm-string, .markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock .cm-string-2, .markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock .cm-regexp { color: var(--code-string) !important; }
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock .cm-number, .markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock .cm-atom, .markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock .cm-bool { color: var(--code-value) !important; }
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock .cm-comment, .markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock .cm-quote { color: var(--code-comment) !important; font-style: italic; }
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock .cm-def, .markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock .cm-function { color: var(--code-function) !important; }
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock .cm-variableName, .markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock .cm-variable-2 { color: var(--cbs-vr) !important; }
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock .cm-typeName, .markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock .cm-className, .markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock .cm-builtin { color: var(--cbs-ty) !important; }
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock .cm-operator { color: var(--code-operator) !important; }
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock .cm-tagName, .markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock .cm-tag { color: var(--code-tag) !important; }
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock .cm-attributeName { color: var(--cbs-at) !important; }
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock .cm-propertyName { color: var(--cbs-pr) !important; }
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock .cm-meta { color: var(--cbs-mt) !important; }
+/* ── token 映射：阅读态（Prism 类；核心已用 --code-* 变量，这里补官方没细分的）*/
+.token.builtin, .token.maybe-class-name, .token.entity, .token.namespace, .token.type { color: var(--cbs-ty) !important; }
+.token.attribute { color: var(--cbs-at) !important; }
+.token.property-access, .token.url, .token.version { color: var(--cbs-pr) !important; }
+.token.request-line, .token.directive, .token.envvar, .token.env-var, .token.operator-head { color: var(--code-keyword) !important; }
+.token.annotation, .token.interpolation, .token.directive { color: var(--cbs-mt) !important; }
+.token.atrule, .token.rule, .token.control, .token.unit { color: var(--code-keyword) !important; }
+.token.char, .token.regex, .token.inserted, .token.template-string { color: var(--code-string) !important; }
+.token.boolean, .token.constant, .token.symbol, .token.deleted { color: var(--code-value) !important; }
+.token.prolog, .token.doctype, .token.cdata { color: var(--code-comment) !important; }
+.token.method, .token.function-name { color: var(--code-function) !important; }
+.token.parameter, .token.argument, .token.params { color: var(--cbs-vr) !important; }
+.token.punctuation { color: var(--code-operator) !important; }
+.token.selector { color: var(--code-tag) !important; }
+
+/* http / REST：显式类名（我们的阅读态接管 + Prism http 语法都会用到；
+   别名 property/url/number/string 其实已覆盖，这里只是双保险）。
+   v1.3.2：Obsidian 的 Prism 构建里没有 http 语法 → 阅读态的 ```http 块会 fallback 到
+   clike / C 去高亮（用户原话「编辑是 http，阅读走 c 语言」）。现在由插件 Hadesr Code v2.25.3 的
+   httpHighlight() 接管（fence 是 http 家族无条件接管，否则按内容嗅探），这里把每条 token
+   拆成**互不相同**的颜色，一眼能分辨：
+     方法=函数色 / 路径=类型色(青) / 版本=注释色(弱化) / 头名=属性色 / 头值·短语=字符串色 / 状态码=数值色 */
+.token.request-target { color: var(--cbs-ty) !important; }
+.token.http-version { color: var(--code-comment) !important; }
+.token.header-name { color: var(--cbs-at) !important; }
+.token.header-value, .token.reason-phrase { color: var(--code-string) !important; }
+.token.status-code { color: var(--code-value) !important; }
