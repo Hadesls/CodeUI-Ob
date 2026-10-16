@@ -148,13 +148,18 @@ const DEFAULTS = { theme: 'one-dark-pro', themes: {}, titles: {}, showToolbar: t
 /* ------------------------------------------------------------ 外观变体（引用条/表格）
    全部变体 CSS 常驻注入，用 body 类门控 —— 下拉只换类，即时生效。
    （教训：门控 CSS 不能条件注入，否则类挂上了没样式 = 点了没反应） */
-/* 引用块成套样式：竖条颜色 + 底色配对（用户定稿：换色=整套换） */
+/* 引用块成套样式：竖条颜色 + 底色配对（用户定稿：换色=整套换）
+   每档给两组值：
+     c / bg  = 浅色模式（竖条色 / 底色，实色）
+     dc / dbg= 深色模式（竖条略提亮；底色用**半透明叠色**，跟着暗背景走，不写死）
+   ⚠ 深色规则的选择器必须是 `body.theme-dark.cs-qbar-x` ——
+      `theme-dark` 类挂在 <body> 上，写成 `.theme-dark body.…` 会永远匹配不到。 */
 const LOOK_QUOTE = {
-  gold:  { name: '暖金（Drake 粉底）', c: '#d99a2b', bg: '#fdefee' },
-  blue:  { name: '浅蓝',              c: '#64b5f6', bg: '#e9f2fb' },
-  teal:  { name: '青绿',              c: '#2a9d8f', bg: '#e7f4f1' },
-  coral: { name: '珊瑚红（原版）',    c: '#e95f59', bg: '#fdefee' },
-  gray:  { name: '暖灰',              c: '#a89f94', bg: '#f1efeb' },
+  gold:  { name: '暖金（Drake 粉底）', c: '#d99a2b', bg: '#fdefee', dc: '#e0a83c', dbg: 'rgba(217,154,43,.13)' },
+  blue:  { name: '浅蓝',              c: '#64b5f6', bg: '#e9f2fb', dc: '#7cc0f8', dbg: 'rgba(100,181,246,.13)' },
+  teal:  { name: '青绿',              c: '#2a9d8f', bg: '#e7f4f1', dc: '#3fbfae', dbg: 'rgba(42,157,143,.15)' },
+  coral: { name: '珊瑚红（原版）',    c: '#e95f59', bg: '#fdefee', dc: '#f07a75', dbg: 'rgba(233,95,89,.13)' },
+  gray:  { name: '暖灰',              c: '#a89f94', bg: '#f1efeb', dc: '#b8afa4', dbg: 'rgba(168,159,148,.13)' },
 };
 const LOOK_TABLE = {
   none:  { name: '主题默认' },
@@ -168,18 +173,27 @@ const LOOK_CSS = [
   /* ---- 引用块成套（竖条色 + 底色同时变；阅读态 + 编辑态竖线都覆盖） ---- */
   ...Object.keys(LOOK_QUOTE).map(function (k) {
     const q = LOOK_QUOTE[k];
-    const S = 'body.cs-qbar-' + k;
+    const S = 'body.cs-qbar-' + k;            /* 浅色（也是默认档） */
+    const D = 'body.theme-dark.cs-qbar-' + k; /* 深色覆盖：更多一个类 → 必胜 */
+    const darkColor = 'color:var(--text-normal) !important;'; /* 深色底上字要浅，不能沿用 #333 */
     return '/* ' + k + ' */' +
-      /* ① 变量兜底：Obsidian / 主题里凡是用变量的地方一起跟着变 */
+      /* ① 变量兜底：Obsidian / 主题里凡是用变量的地方一起跟着变（明暗通用，竖条色两模式都够亮） */
       S + '{--blockquote-border-color:' + q.c + ';--quote-border-color:' + q.c + ';}' +
+      D + '{--blockquote-border-color:' + q.dc + ';--quote-border-color:' + q.dc + ';}' +
       /* ② 阅读态：竖条（snippet 画的 ::before）+ 底色 */
       S + ' :is(.markdown-rendered,.markdown-preview-view) blockquote::before{background-color:' + q.c + ' !important;}' +
       S + ' :is(.markdown-rendered,.markdown-preview-view) blockquote{background-color:' + q.bg + ' !important;}' +
+      D + ' :is(.markdown-rendered,.markdown-preview-view) blockquote::before{background-color:' + q.dc + ' !important;}' +
+      D + ' :is(.markdown-rendered,.markdown-preview-view) blockquote{background-color:' + q.dbg + ' !important;' + darkColor + '}' +
+      D + ' :is(.markdown-rendered,.markdown-preview-view) blockquote :not(pre)>code{background:rgba(160,160,160,.16) !important;color:#ff7a6b !important;}' +
       /* ③ 编辑态：底色 + 竖线（Blue Topaz 用 .cm-blockquote-border 的 border-color；
          某些主题/版本用 ::before 画条或 border-inline-start，全部覆盖） */
       S + ' .markdown-source-view.mod-cm6 .HyperMD-quote{background-color:' + q.bg + ' !important;}' +
+      D + ' .markdown-source-view.mod-cm6 .HyperMD-quote{background-color:' + q.dbg + ' !important;' + darkColor + '}' +
       S + ' .markdown-source-view .cm-blockquote-border{border-color:' + q.c + ' !important;border-inline-start-color:' + q.c + ' !important;border-left-color:' + q.c + ' !important;}' +
-      S + ' .markdown-source-view .cm-blockquote-border::before,' + S + ' .markdown-source-view .cm-blockquote-border::after{background-color:' + q.c + ' !important;border-color:' + q.c + ' !important;}';
+      D + ' .markdown-source-view .cm-blockquote-border{border-color:' + q.dc + ' !important;border-inline-start-color:' + q.dc + ' !important;border-left-color:' + q.dc + ' !important;}' +
+      S + ' .markdown-source-view .cm-blockquote-border::before,' + S + ' .markdown-source-view .cm-blockquote-border::after{background-color:' + q.c + ' !important;border-color:' + q.c + ' !important;}' +
+      D + ' .markdown-source-view .cm-blockquote-border::before,' + D + ' .markdown-source-view .cm-blockquote-border::after{background-color:' + q.dc + ' !important;border-color:' + q.dc + ' !important;}';
   }),
   /* ---- 表格（阅读视图；编辑态表格是 CM6 行渲染，不在此列） ---- */
   'body.cs-table-blueA :is(.markdown-rendered,.markdown-preview-view) table{border-collapse:collapse}',
@@ -199,6 +213,25 @@ const LOOK_CSS = [
   'body.cs-table-gold :is(.markdown-rendered,.markdown-preview-view) table{border-collapse:collapse}',
   'body.cs-table-gold :is(.markdown-rendered,.markdown-preview-view) table th{border:1px solid #e3c98d !important;background:#fdf6e7 !important;color:#7a5a12}',
   'body.cs-table-gold :is(.markdown-rendered,.markdown-preview-view) table td{border:1px solid #e8ddc4 !important;padding:6px 12px}',
+
+  /* ---- 表格：深色模式分支 ----
+     只覆盖**颜色**（边框/表头底色/斑马纹），结构规则（border-collapse 等）上面那批
+     不带 .theme-dark 门控、两种模式都生效，不必重复。
+     深色一律用 rgba 半透明叠色 —— 跟着暗背景走；写实色又会变成"浅色块"。
+     ⚠ 选择器是 `body.theme-dark.cs-table-x`：theme-dark 挂在 <body> 上。 */
+  'body.theme-dark.cs-table-blueA :is(.markdown-rendered,.markdown-preview-view) table th,body.theme-dark.cs-table-blueA :is(.markdown-rendered,.markdown-preview-view) table td{border:1px solid rgba(122,170,215,.30) !important;padding:6px 12px}',
+  'body.theme-dark.cs-table-blueA :is(.markdown-rendered,.markdown-preview-view) table th{background:rgba(122,170,215,.14) !important;color:inherit}',
+  'body.theme-dark.cs-table-blueB :is(.markdown-rendered,.markdown-preview-view) table th{border:1px solid rgba(100,181,246,.40) !important;background:rgba(100,181,246,.20) !important;color:#a8d0f7}',
+  'body.theme-dark.cs-table-blueB :is(.markdown-rendered,.markdown-preview-view) table td{border:1px solid rgba(100,181,246,.22) !important;padding:6px 12px}',
+  'body.theme-dark.cs-table-blueC :is(.markdown-rendered,.markdown-preview-view) table{border:2px solid rgba(122,170,215,.36) !important}',
+  'body.theme-dark.cs-table-blueC :is(.markdown-rendered,.markdown-preview-view) table th{background:rgba(100,181,246,.18) !important;border-bottom:1px solid rgba(122,170,215,.36) !important;color:inherit}',
+  'body.theme-dark.cs-table-blueC :is(.markdown-rendered,.markdown-preview-view) table td{border-bottom:1px solid rgba(122,170,215,.18) !important;padding:6px 12px}',
+  'body.theme-dark.cs-table-blueC :is(.markdown-rendered,.markdown-preview-view) table tr:nth-child(even) td{background:rgba(100,181,246,.07) !important}',
+  'body.theme-dark.cs-table-blueD :is(.markdown-rendered,.markdown-preview-view) table th{background:#3f6d99 !important;color:#fff !important;border:1px solid #3f6d99 !important}',
+  'body.theme-dark.cs-table-blueD :is(.markdown-rendered,.markdown-preview-view) table td{border:1px solid rgba(122,170,215,.28) !important;padding:6px 12px}',
+  'body.theme-dark.cs-table-blueD :is(.markdown-rendered,.markdown-preview-view) table tr:nth-child(even) td{background:rgba(100,181,246,.06) !important}',
+  'body.theme-dark.cs-table-gold :is(.markdown-rendered,.markdown-preview-view) table th{border:1px solid rgba(217,154,43,.38) !important;background:rgba(217,154,43,.18) !important;color:#e6c37a}',
+  'body.theme-dark.cs-table-gold :is(.markdown-rendered,.markdown-preview-view) table td{border:1px solid rgba(217,154,43,.20) !important;padding:6px 12px}',
 ].join('\n');
 
 /* ------------------------------------------------------------ 图标（16px，贴近语雀） */

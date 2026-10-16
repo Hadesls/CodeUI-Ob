@@ -5,12 +5,15 @@
    Obsidian 只读同目录的 theme.css 与 manifest.json，因此本文件可安心留在这里，
    随主题文件夹一起被拷到别的电脑 —— 改外观就改本文件，改完按下面命令重合并。
    ----------------------------------------------------------------------------
-   ★ 与插件的绑定关系（Hadesr Code v2.25.8+，两件套请一起拷贝、联动使用）
-     · 本主题提供「结构」：引用块 4px 竖条（blockquote::before）、粉底、段落级强制换行、
+   ★ 与插件的绑定关系（Hadesr Code v2.26.0+，两件套请一起拷贝、联动使用）
+     · 本主题提供「结构」：引用块 4px 竖条（blockquote::before）、底色、段落级强制换行、
        引用内列表缩进、行内代码红字灰底、分割线细线、任务清单已完成项删除线、
        去掉底子主题的代码块装饰。
+     · 本主题提供「明暗适配」：上述这几项的**颜色**都按 theme-light / theme-dark 切换
+       （v1.5.0 起）。代码块不在此列 —— 它自带 9 套配色，刻意与明暗解耦。
      · 插件提供「换色」：「设置 → 外观样式 → 引用块颜色」5 档（暖金 / 浅蓝 / 青绿 /
-       珊瑚红 / 暖灰），通过 --blockquote-border-color 与门控 CSS 覆盖本主题默认色。
+       珊瑚红 / 暖灰），每档**浅色/深色各一套值**（深色用半透明叠色），
+       通过 --blockquote-border-color 与门控 CSS 覆盖本主题默认色。
      · 只装主题、不装插件 → 引用块颜色固定为默认档，无法切换（下拉由插件提供）。
      · 只装插件、不装主题 → 阅读视图引用块没有竖条可上色（那条 ::before 由本主题画）。
    ----------------------------------------------------------------------------
@@ -29,14 +32,21 @@
    ============================================================================ */
 
 /* ============================================================
-   Hadesr UI  v1.4.0     配套插件：Hadesr Code v2.25.8+
+   Hadesr UI  v1.5.0     配套插件：Hadesr Code v2.26.0+
    ------------------------------------------------------------
    覆盖内容：
    1) 去掉底子主题自带的代码块装饰（语言标签 / 边框 / 阴影），交给插件
-   2) 引用块：粉底 + 左侧 4px 竖条 + 强制换行（颜色由插件下拉控制，见上方绑定说明）
+   2) 引用块：底色 + 左侧 4px 竖条 + 强制换行（颜色由插件下拉控制，见上方绑定说明）
    3) 行内代码：红字 + 灰底（主题独有，插件无此项控件）
    4) 分割线：细灰线（主题独有）
    5) 任务清单：已完成项（`- [x]`）加删除线（v1.4.0 从独立 CSS 片段并入主题）
+   ------------------------------------------------------------
+   ★ v1.5.0 明暗适配：引用块底色/字色、行内代码字色、分割线颜色
+     全部改成**按明暗切换的变量**（见下面 body / .theme-dark 两块），不再写死浅色 ——
+     以前深色模式下引用块会变成"暗界面上一块亮粉底"。
+     注意选择器写法：变量放在 `.theme-dark` 作用域即可；
+     插件那边的门控要用 `body.theme-dark.cs-qbar-x`（theme-dark 类挂在 <body> 上，
+     写成 `.theme-dark body.cs-qbar-x` 会永远匹配不到）。
    ============================================================ */
 
 /* ---------- 1) 代码块：去掉主题装饰，避免与 Hadesr Code 冲突 ---------- */
@@ -55,16 +65,35 @@ body:not(.remove-language-type) pre::before,
   filter: none !important;
 }
 
-/* ---------- 2) 引用块：Drake 粉底 + 左侧 4px 竖条 ----------
+/* ---------- 2) 引用块：默认底色 + 左侧 4px 竖条 ----------
    竖条颜色由 Hadesr Code「设置 → 外观样式 → 引用块颜色」下拉控制
-   （插件注入 body.cs-qbar-* 门控 CSS 覆盖这里的默认色，这里只画条）。 */
+   （插件注入 body.cs-qbar-* 门控 CSS 覆盖这里的默认色，这里只画条）。
+
+   ★ 明暗适配（v1.5.0）：底色与字色**按主题明暗切换**，不再写死浅色 ——
+     写死浅色时，深色模式下会变成"暗界面上一块亮粉底"。
+     变量放 body / .theme-dark 两个作用域；插件换色只改竖条与底色，
+     深色模式的**字色**由下面 .theme-dark 那条兜住（否则深色底 + #333 深字 = 看不清）。 */
+body {
+  --cbs-qbar-bg: #fdefee;                 /* 默认档（暖金）浅色底 */
+  --cbs-qbar-fg: #333333;
+  --cbs-icode-fg: #d63200;                /* 行内代码字色 */
+  --cbs-icode-bg: rgba(127, 127, 127, 0.14);
+  --cbs-hr: rgba(39, 56, 73, 0.45);       /* 分割线 */
+}
+.theme-dark {
+  --cbs-qbar-bg: rgba(217, 154, 43, 0.13); /* 半透明叠色，跟着暗背景走 */
+  --cbs-qbar-fg: var(--text-normal);
+  --cbs-icode-fg: #ff7a6b;                 /* 深底上 #d63200 太暗，提亮 */
+  --cbs-icode-bg: rgba(160, 160, 160, 0.16);
+  --cbs-hr: rgba(210, 215, 222, 0.30);     /* 深背景上深灰线看不见，反过来用浅线 */
+}
 .markdown-rendered blockquote,
 .markdown-preview-view blockquote {
-  background-color: #fdefee !important;
+  background-color: var(--cbs-qbar-bg) !important;
   border-left: none !important;
   border-radius: 2px;
   padding: 10px 16px !important;
-  color: #333333 !important;
+  color: var(--cbs-qbar-fg) !important;
   position: relative;
   margin-inline-start: 0 !important;
   margin-inline-end: 0 !important;
@@ -106,24 +135,24 @@ body:not(.remove-language-type) pre::before,
   background-color: #d99a2b;
   border-radius: 2px;
 }
-/* 引用块内部的行内代码保持红字 + 灰底（不被引用块粉底带偏） */
+/* 引用块内部的行内代码保持红字 + 灰底（不被引用块底色带偏） */
 .markdown-rendered blockquote :not(pre) > code,
 .markdown-preview-view blockquote :not(pre) > code {
-  background: rgba(127, 127, 127, 0.14) !important;
-  color: #d63200 !important;
+  background: var(--cbs-icode-bg) !important;
+  color: var(--cbs-icode-fg) !important;
 }
-/* 编辑视图（实时预览）的引用行：粉底（编辑页换行本来就正常，不用处理） */
+/* 编辑视图（实时预览）的引用行：底色与字色跟随明暗（编辑页换行本来就正常，不用处理） */
 .markdown-source-view.mod-cm6 .HyperMD-quote {
-  background-color: #fdefee !important;
-  color: #333333 !important;
+  background-color: var(--cbs-qbar-bg) !important;
+  color: var(--cbs-qbar-fg) !important;
 }
 
-/* ---------- 3) 行内代码：Drake 红字 + 灰色底纹 ---------- */
+/* ---------- 3) 行内代码：红字 + 灰色底纹 ---------- */
 .markdown-rendered :not(pre) > code,
 .markdown-preview-view :not(pre) > code {
-  background: rgba(127, 127, 127, 0.14) !important;
+  background: var(--cbs-icode-bg) !important;
   border: none !important;
-  color: #d63200 !important;
+  color: var(--cbs-icode-fg) !important;
   margin: 0 2px;
   padding: 2px 5px !important;
   border-radius: 4px;
@@ -131,25 +160,25 @@ body:not(.remove-language-type) pre::before,
 }
 /* 编辑视图行内代码 */
 .markdown-source-view.mod-cm6 .cm-inline-code {
-  background: rgba(127, 127, 127, 0.14) !important;
-  color: #d63200 !important;
+  background: var(--cbs-icode-bg) !important;
+  color: var(--cbs-icode-fg) !important;
   border-radius: 4px;
 }
 .markdown-source-view.mod-cm6 .cm-inline-code .cm-hmd-inline-code {
-  color: #d63200 !important;
+  color: var(--cbs-icode-fg) !important;
 }
 
-/* ---------- 4) 分割线：Drake 细线 ---------- */
+/* ---------- 4) 分割线：细线（颜色跟随明暗） ---------- */
 .markdown-rendered hr,
 .markdown-preview-view hr {
   border: none !important;
-  border-top: 1px solid rgba(39, 56, 73, 0.45) !important;
+  border-top: 1px solid var(--cbs-hr) !important;
   background: none !important;
   height: 0 !important;
   margin: 1.5em 0;
 }
 .markdown-source-view.mod-cm6 .cm-hr {
-  color: rgba(39, 56, 73, 0.45) !important;
+  color: var(--cbs-hr) !important;
 }
 
 /* ---------- 5) 任务清单：已完成项加删除线 ----------

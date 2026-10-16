@@ -1,10 +1,10 @@
 {
-	"id": "hadesr-code",
-	"name": "Hadesr Code",
-	"version": "2.25.8",
-	"minAppVersion": "1.0.0",
-	"description": "代码块工具栏（编辑态）：语言、主题、复制、下载、行号；阅读视图同一主题。含表格工具栏（插删行列/对齐/删表）、表格列宽拖拽、引用块与表格成套配色。零 CodeMirror 依赖。",
-	"author": "Hadesr",
-	"authorUrl": "https://github.com/Hadesls",
-	"isDesktopOnly": false
+    "id": "hadesr-code",
+    "name": "Hadesr Code",
+    "version": "2.26.0",
+    "minAppVersion": "1.0.0",
+    "description": "代码块工具栏（编辑态）：语言、主题、复制、下载、行号；阅读视图同一主题。含表格工具栏（插删行列/对齐/删表）、表格列宽拖拽、引用块与表格成套配色（浅色/深色各一套，跟随明暗）。零 CodeMirror 依赖。",
+    "author": "Hadesr",
+    "authorUrl": "https://github.com/Hadesls",
+    "isDesktopOnly": false
 }
