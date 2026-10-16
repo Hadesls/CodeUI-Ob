@@ -154,7 +154,6 @@ cp -R "themes/Hadesr UI/." "$VAULT/.obsidian/themes/Hadesr UI/"
 ```
 Code-UI/
 ├─ README.md                  ← 本文件
-├─ CHANGELOG.md               ← 版本改动记录（插件 / 主题分开小节）
 ├─ LICENSE                    ← MIT（含 Blue Topaz 署名）
 ├─ hadesr-code/               ← 插件本体（= Obsidian 插件目录里的内容）
 │  ├─ main.js
