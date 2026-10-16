@@ -25,6 +25,12 @@ DEF_THEME = os.path.join(ROOT, "Hadesr UI")                # 主题目录（含 
 # ↑ 主题目录就放在仓库一级（2026-10-16 从 `themes/Hadesr UI` 提出来的）——
 #   这样「仓库一级的每个文件夹 = 拷进 vault 的一份东西」，和 hadesr-code/ 对称。
 DEF_BASE = os.path.join(HERE, "base-Blue-Topaz.css")       # 底子（随仓库一起分发）
+# ↑ 仓库一级的两个文件夹名 = 「拷进 vault 后的文件夹名」，也就是插件 manifest 的 id：
+#     hadesr-code/  →  plugins/hadesr-code
+#     Hadesr UI/    →  themes/Hadesr UI
+#   ⚠ 插件那个**必须是小写带横杠 `hadesr-code`**（= manifest 的 id）——
+#     Obsidian 拿文件夹名去匹配 id，改成 `Hadesr Code` 就加载不了。
+#     显示名「Hadesr Code」来自 manifest 的 name 字段，跟文件夹名无关。
 DEF_PLUGIN_MANIFEST = os.path.join(ROOT, "hadesr-code", "manifest.json")
 SEP = "/* ↓↓↓ Hadesr UI 覆盖层 开始 ↓↓↓ */"
 
