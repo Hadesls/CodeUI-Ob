@@ -4,7 +4,7 @@
 
 | 资产 | 名字 | 版本 | 干什么的 |
 |---|---|---|---|
-| 插件 | **Hadesr Code** | `v2.29.2` | 代码块工具栏（语言 / 主题 / 复制 / 下载 / 行号）、代码块配色与字体、**自定义正则高亮**、表格工具栏（含**复制表格**）、表格列宽拖拽、引用块换色档位、表格配色档位、**主题外观（整体配色 / 文件树 / 代码块，共 20 项）** |
+| 插件 | **Hadesr Code** | `v2.29.3` | 代码块工具栏（语言 / 主题 / 复制 / 下载 / 行号）、代码块配色与字体、**自定义正则高亮**、表格工具栏（含**复制表格**）、表格列宽拖拽、引用块换色档位、表格配色档位、**主题外观（整体配色 / 文件树 / 代码块，共 20 项）** |
 | 主题 | **Hadesr UI** | `v1.5.0` | 代码块 / 表格 / 引用块的整套观感，**任务清单已完成项删除线**，**明暗双模式适配**，**基于 Blue Topaz 精简改造** |
 
 ---
@@ -186,7 +186,7 @@ cp -R "Hadesr UI/."        "$VAULT/.obsidian/themes/Hadesr UI/"
 
 然后在 Obsidian 里**重载**：`Ctrl/Cmd + R`，或到设置里把插件关掉再打开。
 
-> 插件版本会显示在 **设置 → Hadesr Code** 的标题上（例如 `Hadesr Code 设置 v2.29.2`）—— 一眼就能看出这台是不是旧的。
+> 插件版本会显示在 **设置 → Hadesr Code** 的标题上（例如 `Hadesr Code 设置 v2.29.3`）—— 一眼就能看出这台是不是旧的。
 
 ---
 
@@ -247,7 +247,7 @@ Code-UI/
 export PATH="$HOME/bin:$PATH"
 cd /path/to/CodeUI-Ob                     # 仓库工作目录
 SRC="$PWD" \
-MESSAGE="feat: xxx（v2.29.2）" \
+MESSAGE="feat: xxx（v2.29.3）" \
 GH_TOKEN=$(gh auth token) \
 node "$HOME/bin/push-via-api-retry.js" Hadesls/CodeUI-Ob main
 ```

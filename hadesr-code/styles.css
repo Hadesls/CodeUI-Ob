@@ -7,7 +7,8 @@
 /* ---------- 工具条 ---------- */
 .cbs-bar {
   position: fixed;
-  z-index: 60;
+  /* 必须低于 --layer-modal(50)：否则会盖住任何插件的弹窗 */
+  z-index: var(--layer-popover, 30);
   display: flex;
   align-items: center;
   gap: 2px;
@@ -160,7 +161,8 @@
 /* ---------- ⋯ 菜单 ---------- */
 .cbs-menu {
   position: fixed;
-  z-index: 61;
+  /* 比工具条高一点，但仍要低于弹窗层 */
+  z-index: calc(var(--layer-popover, 30) + 5);
   min-width: 224px;
   padding: 6px;
   border-radius: 10px;
@@ -200,7 +202,7 @@
   position: fixed;
   right: 18px;
   bottom: 18px;
-  z-index: 62;
+  z-index: var(--layer-popover, 30);
   display: inline-flex;
   align-items: center;
   gap: 7px;
