@@ -143,7 +143,85 @@ const THEMES = {
   'solarized-light': { name: 'Solarized Light', bg: '#fdf6e3', fg: '#657b83', head: '#f2ebd6', border: '#e3dbc4', kw: '#859900', str: '#2aa198', num: '#d33682', com: '#93a1a1', fn: '#268bd2', vr: '#b58900', ty: '#b58900', op: '#859900', tag: '#268bd2', at: '#b58900', pr: '#268bd2', mt: '#93a1a1' },
 };
 
-const DEFAULTS = { theme: 'one-dark-pro', themes: {}, titles: {}, showToolbar: true, showInReading: true, reserveSpace: true, lineNumbers: true, barOpacity: 1, barHeight: 34, barFont: 12.5, codeFont: '', codeFontSize: 0, quoteBar: 'gold', tableStyle: 'blueB', tableBar: true, tableWidths: {}, fileLineNumbers: {}, fontBody: '', fontBodySize: 0, customCss: '', customHighlight: true, customRules: '' };
+const DEFAULTS = { theme: 'one-dark-pro', themes: {}, titles: {}, showToolbar: true, showInReading: true, reserveSpace: true, lineNumbers: true, barOpacity: 1, barHeight: 34, barFont: 12.5, codeFont: '', codeFontSize: 0, quoteBar: 'gold', tableStyle: 'blueB', tableBar: true, tableWidths: {}, fileLineNumbers: {}, fontBody: '', fontBodySize: 0, customCss: '', customHighlight: true, customRules: '',
+  /* 主题外观：复用 Blue Topaz 底子（已合成进主题 theme.css）里现成的 CSS，本插件只负责往 body 加/删类名。
+     默认值与 Blue Topaz 的 @settings 默认一致 —— 所以开启后观感跟装 Style Settings 时一模一样。 */
+  appFolderColor: true, appFolderColorMode: 'folder-style-change-options-colorful-border',
+  appFolderColorPalette: 'folder-colorful-six', appFolderIcons: true, appNoArrow: true, appNoRootIcon: true,
+  /* 第二批：代码块样式 + 文件树细节。默认一律「不生效」，保证升级后观感不变，由用户自己开启 */
+  appCodeNoIndentLine: false, appCodeWrapReading: false, appCodeNoWrapEdit: false,
+  appCodeLetterSpace: 0, appCodeNoActiveLine: false, appCodeBoxStyle: '',
+  appNoFileIcons: false, appFolderUnderline: false, appFolderDot: false,
+  appDarkFileBg: false, appPlainFileTitle: false,
+  appFileNameStyle: '', appFileBgShape: '',
+  /* 第三步：整体配色方案（13 套，纯换一个 body class）。'' = 不额外加类，保持主题原样 */
+  appColorScheme: '' };
+
+/* 彩色文件夹的 6 种模式 —— 互斥，body 上同一时刻只能有一个 */
+const FOLDER_COLOR_MODES = [
+  'folder-style-change-options-colorful-default',
+  'folder-style-change-options-colorful',
+  'folder-style-change-options-colorful-order',
+  'folder-style-change-options-colorful-title',
+  'folder-style-change-options-colorful-tab-liked',
+  'folder-style-change-options-colorful-border'
+];
+const FOLDER_COLOR_MODE_NAMES = {
+  'folder-style-change-options-colorful-default': '不着色',
+  'folder-style-change-options-colorful': '按名字首字符（0-9 / A-Z）',
+  'folder-style-change-options-colorful-order': '按排列顺序',
+  'folder-style-change-options-colorful-title': '只给标题上色',
+  'folder-style-change-options-colorful-tab-liked': '标签页样式',
+  'folder-style-change-options-colorful-border': '边框卡片'
+};
+/* 配色套数 —— 同样互斥。'folder-colorful-custom' 要配自定义颜色，本插件暂不提供，但清理时要一并移除 */
+const FOLDER_PALETTES = [
+  'folder-colorful-one', 'folder-colorful-two', 'folder-colorful-three',
+  'folder-colorful-four', 'folder-colorful-five', 'folder-colorful-six', 'folder-colorful-custom'
+];
+const FOLDER_PALETTE_NAMES = {
+  'folder-colorful-one': '样式 1（高透明）',
+  'folder-colorful-two': '样式 2（低透明）',
+  'folder-colorful-three': '样式 3',
+  'folder-colorful-four': '样式 4',
+  'folder-colorful-five': '样式 5',
+  'folder-colorful-six': '样式 6'
+};
+
+/* 三个样式下拉。'' = 不额外加类（保持主题现状）。
+   下面 *_VALUES 是"清理用"的全集 —— 换选项时先把整组清掉，避免残留。 */
+const FILE_NAME_STYLES = { '': '默认（不换行）', 'file-name-wrapped': '自动换行', 'file-name-animation': '悬停时滚动' };
+const FILE_NAME_STYLE_VALUES = ['file-name-wrapped', 'file-name-non-wrapped', 'file-name-animation'];
+const FILE_BG_SHAPES = { '': '默认（矩形）', 'file-bg-rounded-rectangle': '圆角矩形', 'file-bg-pill': '胶囊形' };
+const FILE_BG_SHAPE_VALUES = ['file-shape-default', 'file-bg-rounded-rectangle', 'file-bg-pill'];
+const CODEBOX_STYLES = { '': '默认', 'codebox-frosted-glass': '毛玻璃' };
+const CODEBOX_STYLE_VALUES = ['codebox-default-style', 'codebox-frosted-glass'];
+
+/* 整体配色方案（Blue Topaz 的 13 套）。'' = 不额外加类。
+   原理同样是"换一个 body class" —— 配色变量全在主题里，插件不负责颜色。 */
+const COLOR_SCHEMES = {
+  '': '默认（不加类）',
+  'color-scheme-options-default': 'Default',
+  'color-scheme-options-avocado-topaz': 'Avocado',
+  'color-scheme-options-monochrome-topaz': 'Monochrome',
+  'color-scheme-options-pink-topaz': 'Pink',
+  'color-scheme-options-topaz-nord': 'Topaz-Nord',
+  'color-scheme-options-flamingo': 'Flamingo',
+  'color-scheme-options-honey-milk-topaz': 'Honey milk 蜂蜜牛奶',
+  'color-scheme-options-chocolate-topaz': 'Hazelnut chocolate 榛子巧克力',
+  'color-scheme-options-lilac': 'Lilac 丁香',
+  'color-scheme-options-autumn-topaz': 'Autumn 秋日',
+  'color-scheme-options-lillimon-topaz': 'Rubik\'s Cube 魔方',
+  'color-scheme-options-simplicity-topaz': 'Simplicity 简约'
+};
+const COLOR_SCHEME_VALUES = [
+  'color-scheme-options-default', 'color-scheme-options-avocado-topaz',
+  'color-scheme-options-monochrome-topaz', 'color-scheme-options-pink-topaz',
+  'color-scheme-options-topaz-nord', 'color-scheme-options-flamingo',
+  'color-scheme-options-honey-milk-topaz', 'color-scheme-options-chocolate-topaz',
+  'color-scheme-options-lilac', 'color-scheme-options-autumn-topaz',
+  'color-scheme-options-lillimon-topaz', 'color-scheme-options-simplicity-topaz'
+];
 
 /* ------------------------------------------------------------ 外观变体（引用条/表格）
    全部变体 CSS 常驻注入，用 body 类门控 —— 下拉只换类，即时生效。
@@ -293,6 +371,7 @@ class CodeStudioPlugin extends Plugin {
       this.applyCustom();
       this.applyBarCss();
       this.applyLook();
+      this.applyAppearance();   /* 主题外观（彩色文件夹 / 文件夹图标 / 折叠箭头）：只往 body 加类，CSS 在主题里 */
       this.addSettingTab(new CodeStudioSettingTab(this.app, this));
 
       this.addCommand({ id: 'cs-next-theme', name: '切换代码主题（下一个）', callback: () => this.cycleTheme() });
@@ -387,6 +466,7 @@ class CodeStudioPlugin extends Plugin {
         document.body.classList.remove('cs-qbar-' + (this.settings.quoteBar || 'gold'));
         if (this.settings.tableStyle && this.settings.tableStyle !== 'none') document.body.classList.remove('cs-table-' + this.settings.tableStyle);
       } catch (e) { }
+      this.clearAppearance();
     } catch (e) { }
   }
 
@@ -676,6 +756,97 @@ class CodeStudioPlugin extends Plugin {
       if (this.themeProvidesColors()) this.stripInlineColors();
     } catch (e) { }
   }
+  /* ===== 主题外观 =====
+     只做一件事：按设置往 <body> 上加/删类名。
+     CSS 全部来自主题「Hadesr UI」（Blue Topaz 底子已合成进 theme.css，光彩色文件夹就 422 处规则），
+     本插件不新增任何样式 —— 所以观感与装 Style Settings 时逐像素一致，也不增加渲染负担。 */
+  applyAppearance() {
+    try {
+      const cl = document.body.classList;
+      const s = this.settings;
+
+      /* --- 彩色文件夹：三种类（主开关 + 模式 + 配色），模式和配色各自互斥 --- */
+      FOLDER_COLOR_MODES.forEach(function (m) { cl.remove(m); });
+      FOLDER_PALETTES.forEach(function (m) { cl.remove(m); });
+
+      if (s.appFolderColor) {
+        cl.add('bt-toggle-colorful-folder');
+        const mode = FOLDER_COLOR_MODES.indexOf(s.appFolderColorMode) >= 0
+          ? s.appFolderColorMode : 'folder-style-change-options-colorful-border';
+        cl.add(mode);
+        const pal = FOLDER_PALETTES.indexOf(s.appFolderColorPalette) >= 0
+          ? s.appFolderColorPalette : 'folder-colorful-six';
+        cl.add(pal);
+      } else {
+        cl.remove('bt-toggle-colorful-folder');
+      }
+
+      /* --- 三个独立开关 --- */
+      cl.toggle('folder-icons', !!s.appFolderIcons);
+      cl.toggle('remove-arrow', !!s.appNoArrow);
+      cl.toggle('remove-first-folder-icon', !!s.appNoRootIcon);
+
+      /* --- 文件树细节 --- */
+      cl.toggle('remove-file-icons', !!s.appNoFileIcons);
+      cl.toggle('folder-note-underline', !!s.appFolderUnderline);
+      cl.toggle('folder-note-dot', !!s.appFolderDot);
+      cl.toggle('dark-background-file', !!s.appDarkFileBg);
+      cl.toggle('plain-file-title', !!s.appPlainFileTitle);
+
+      /* --- 整体配色方案（13 套，互斥；配色变量全在主题里。值不合法就不认）--- */
+      COLOR_SCHEME_VALUES.forEach(function (v) { cl.remove(v); });
+      if (s.appColorScheme && COLOR_SCHEME_VALUES.indexOf(s.appColorScheme) >= 0) cl.add(s.appColorScheme);
+
+      /* --- 三个样式下拉：先整组清掉，再按选择加一个（值必须合法，否则不认）--- */
+      FILE_NAME_STYLE_VALUES.forEach(function (v) { cl.remove(v); });
+      if (s.appFileNameStyle && FILE_NAME_STYLE_VALUES.indexOf(s.appFileNameStyle) >= 0) cl.add(s.appFileNameStyle);
+      FILE_BG_SHAPE_VALUES.forEach(function (v) { cl.remove(v); });
+      if (s.appFileBgShape && FILE_BG_SHAPE_VALUES.indexOf(s.appFileBgShape) >= 0) cl.add(s.appFileBgShape);
+      CODEBOX_STYLE_VALUES.forEach(function (v) { cl.remove(v); });
+      if (s.appCodeBoxStyle && CODEBOX_STYLE_VALUES.indexOf(s.appCodeBoxStyle) >= 0) cl.add(s.appCodeBoxStyle);
+
+      /* --- 代码块样式（都是加个类）--- */
+      cl.toggle('mute-code-indent-line', !!s.appCodeNoIndentLine);
+      cl.toggle('whole-code-wrap', !!s.appCodeWrapReading);
+      cl.toggle('nowrap-edit-codebox', !!s.appCodeNoWrapEdit);
+      cl.toggle('muted-code-activeline-bg', !!s.appCodeNoActiveLine);
+
+      /* --- 代码字间距：本功能唯一需要"注入一条 CSS 变量"的地方 ---
+         主题在 body 上定义了 --letter-space-code（默认 0），代码块用
+         calc(var(--letter-space-code) * 0.02em) 消费。用 html body 提一级特异性稳压。
+         先清掉可能残留的同 id 元素（比如上次禁用时 onunload 没能跑到），再建新的。 */
+      if (!this._appEl) {
+        const stale = document.getElementById('hadesr-code-appearance');
+        if (stale) stale.remove();
+        this._appEl = document.createElement('style');
+        this._appEl.id = 'hadesr-code-appearance';
+        document.head.appendChild(this._appEl);
+      }
+      const ls = Number(s.appCodeLetterSpace) || 0;
+      this._appEl.textContent = ls > 0 ? 'html body{--letter-space-code:' + ls + ';}' : '';
+    } catch (e) { }
+  }
+
+  /* 退出时把本功能加的类全部摘掉 —— 与 Style Settings 的 removeClasses() 行为一致，
+     避免插件被禁用后 body 上残留"幽灵类"造成样式来源说不清。 */
+  clearAppearance() {
+    try {
+      const cl = document.body.classList;
+      const plain = ['bt-toggle-colorful-folder', 'folder-icons', 'remove-arrow', 'remove-first-folder-icon',
+        'remove-file-icons', 'folder-note-underline', 'folder-note-dot', 'dark-background-file',
+        'plain-file-title', 'mute-code-indent-line', 'whole-code-wrap',
+        'nowrap-edit-codebox', 'muted-code-activeline-bg'];
+      cl.remove.apply(cl, plain);
+      FOLDER_COLOR_MODES.forEach(function (m) { cl.remove(m); });
+      FOLDER_PALETTES.forEach(function (m) { cl.remove(m); });
+      FILE_NAME_STYLE_VALUES.forEach(function (v) { cl.remove(v); });
+      FILE_BG_SHAPE_VALUES.forEach(function (v) { cl.remove(v); });
+      CODEBOX_STYLE_VALUES.forEach(function (v) { cl.remove(v); });
+      COLOR_SCHEME_VALUES.forEach(function (v) { cl.remove(v); });
+      if (this._appEl) { this._appEl.textContent = ''; this._appEl.remove(); this._appEl = null; }
+    } catch (e) { }
+  }
+
   stripInlineColors() {
     try {
       const view = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -2429,6 +2600,113 @@ class CodeStudioSettingTab extends PluginSettingTab {
       });
       new Notice(PREFIX + '已清除所有表格列宽记忆');
     }));
+
+    c.createEl('h3', { text: '主题外观 · 整体配色' });
+    c.createEl('p', { text: '换一整套配色（标题 / 正文 / 背景 / 侧栏）。颜色值全在主题里，插件只换一个类名；选了不满意随时切回「默认」。', cls: 'setting-item-description' });
+
+    new Setting(c).setName('配色方案').setDesc('13 套可选（由 Blue Topaz 社区贡献）')
+      .addDropdown((d) => {
+        Object.keys(COLOR_SCHEMES).forEach((v) => d.addOption(v, COLOR_SCHEMES[v]));
+        d.setValue(p.settings.appColorScheme || '');
+        d.onChange(async (v) => { p.settings.appColorScheme = v; await p.saveSettings(); p.applyAppearance(); });
+      });
+
+    c.createEl('h3', { text: '主题外观 · 文件树' });
+    c.createEl('p', { text: '只对主题「Hadesr UI」有效 —— 样式是 Blue Topaz 底子自带的，本插件只当开关（不新增 CSS，不会变卡，观感与原来一致）。原来的 Style Settings 可以卸掉了。', cls: 'setting-item-description' });
+
+    new Setting(c).setName('彩色文件夹').setDesc('给左侧文件树的每个文件夹套一套配色')
+      .addToggle((t) => t.setValue(!!p.settings.appFolderColor)
+        .onChange(async (v) => { p.settings.appFolderColor = v; await p.saveSettings(); p.applyAppearance(); }));
+
+    new Setting(c).setName('着色方式').setDesc('仅在「彩色文件夹」开启时生效')
+      .addDropdown((d) => {
+        FOLDER_COLOR_MODES.forEach((id) => d.addOption(id, FOLDER_COLOR_MODE_NAMES[id] || id));
+        d.setValue(p.settings.appFolderColorMode || 'folder-style-change-options-colorful-border');
+        d.onChange(async (v) => { p.settings.appFolderColorMode = v; await p.saveSettings(); p.applyAppearance(); });
+      });
+
+    new Setting(c).setName('配色套数').setDesc('6 套预设，挨个换一下看喜欢哪个')
+      .addDropdown((d) => {
+        FOLDER_PALETTES.forEach((id) => { if (FOLDER_PALETTE_NAMES[id]) d.addOption(id, FOLDER_PALETTE_NAMES[id]); });
+        d.setValue(p.settings.appFolderColorPalette || 'folder-colorful-six');
+        d.onChange(async (v) => { p.settings.appFolderColorPalette = v; await p.saveSettings(); p.applyAppearance(); });
+      });
+
+    new Setting(c).setName('文件夹图标').setDesc('文件夹名前显示图标')
+      .addToggle((t) => t.setValue(!!p.settings.appFolderIcons)
+        .onChange(async (v) => { p.settings.appFolderIcons = v; await p.saveSettings(); p.applyAppearance(); }));
+
+    new Setting(c).setName('移除折叠箭头').setDesc('去掉文件夹左边那个三角')
+      .addToggle((t) => t.setValue(!!p.settings.appNoArrow)
+        .onChange(async (v) => { p.settings.appNoArrow = v; await p.saveSettings(); p.applyAppearance(); }));
+
+    new Setting(c).setName('第一层文件夹不显示图标').setDesc('顶层文件夹只留文字，更清爽')
+      .addToggle((t) => t.setValue(!!p.settings.appNoRootIcon)
+        .onChange(async (v) => { p.settings.appNoRootIcon = v; await p.saveSettings(); p.applyAppearance(); }));
+
+    new Setting(c).setName('移除文件前图标').setDesc('移除 .md 文件前的图标（文件夹的图标另由上面「文件夹图标」那一项管）')
+      .addToggle((t) => t.setValue(!!p.settings.appNoFileIcons)
+        .onChange(async (v) => { p.settings.appNoFileIcons = v; await p.saveSettings(); p.applyAppearance(); }));
+
+    new Setting(c).setName('文件夹下划线').setDesc('⚠ 只对「已折叠」的文件夹生效 —— 展开的文件夹标题不会有下划线')
+      .addToggle((t) => t.setValue(!!p.settings.appFolderUnderline)
+        .onChange(async (v) => { p.settings.appFolderUnderline = v; await p.saveSettings(); p.applyAppearance(); }));
+
+    new Setting(c).setName('文件夹后加圆点').setDesc('文件夹名后面跟一个小圆点')
+      .addToggle((t) => t.setValue(!!p.settings.appFolderDot)
+        .onChange(async (v) => { p.settings.appFolderDot = v; await p.saveSettings(); p.applyAppearance(); }));
+
+    new Setting(c).setName('当前文件背景变深').setDesc('左侧列表里，当前打开的那篇笔记改用主题色底 + 白字标出（不是改正文背景）')
+      .addToggle((t) => t.setValue(!!p.settings.appDarkFileBg)
+        .onChange(async (v) => { p.settings.appDarkFileBg = v; await p.saveSettings(); p.applyAppearance(); }));
+
+    new Setting(c).setName('取消标题栏渐变（仅手机端）').setDesc('手机上笔记页顶部那条标题栏有一层半透明渐变底色，开启后变纯色。⚠ 电脑端看不出区别 —— 主题里用到这个渐变的地方只有一条规则，且限定手机端')
+      .addToggle((t) => t.setValue(!!p.settings.appPlainFileTitle)
+        .onChange(async (v) => { p.settings.appPlainFileTitle = v; await p.saveSettings(); p.applyAppearance(); }));
+
+    new Setting(c).setName('文件名样式').setDesc('长文件名放不下时怎么处理')
+      .addDropdown((d) => {
+        Object.keys(FILE_NAME_STYLES).forEach((v) => d.addOption(v, FILE_NAME_STYLES[v]));
+        d.setValue(p.settings.appFileNameStyle || '');
+        d.onChange(async (v) => { p.settings.appFileNameStyle = v; await p.saveSettings(); p.applyAppearance(); });
+      });
+
+    new Setting(c).setName('文件背景形状').setDesc('选中的文件是方角还是圆角')
+      .addDropdown((d) => {
+        Object.keys(FILE_BG_SHAPES).forEach((v) => d.addOption(v, FILE_BG_SHAPES[v]));
+        d.setValue(p.settings.appFileBgShape || '');
+        d.onChange(async (v) => { p.settings.appFileBgShape = v; await p.saveSettings(); p.applyAppearance(); });
+      });
+
+    c.createEl('h3', { text: '主题外观 · 代码块' });
+    c.createEl('p', { text: '这几项只影响代码块的「行为/样式」，不影响配色 —— 配色仍由上面的「代码主题」管（9 套）。默认全关，开启后才生效。', cls: 'setting-item-description' });
+
+    new Setting(c).setName('取消缩进参考线').setDesc('去掉代码块里那几条竖着的缩进参考线')
+      .addToggle((t) => t.setValue(!!p.settings.appCodeNoIndentLine)
+        .onChange(async (v) => { p.settings.appCodeNoIndentLine = v; await p.saveSettings(); p.applyAppearance(); }));
+
+    new Setting(c).setName('阅读视图代码换行').setDesc('长行自动折行，不用横向滚动（Blue Topaz 原本默认开，这里默认关，你按需打开）')
+      .addToggle((t) => t.setValue(!!p.settings.appCodeWrapReading)
+        .onChange(async (v) => { p.settings.appCodeWrapReading = v; await p.saveSettings(); p.applyAppearance(); }));
+
+    new Setting(c).setName('编辑态不换行').setDesc('实时预览里代码一律不折行')
+      .addToggle((t) => t.setValue(!!p.settings.appCodeNoWrapEdit)
+        .onChange(async (v) => { p.settings.appCodeNoWrapEdit = v; await p.saveSettings(); p.applyAppearance(); }));
+
+    new Setting(c).setName('取消当前行高亮').setDesc('光标所在行不要那条底色')
+      .addToggle((t) => t.setValue(!!p.settings.appCodeNoActiveLine)
+        .onChange(async (v) => { p.settings.appCodeNoActiveLine = v; await p.saveSettings(); p.applyAppearance(); }));
+
+    new Setting(c).setName('代码字间距').setDesc('0 = 不调整（主题默认）。等宽字体挤的时候可以加一点')
+      .addSlider((sl) => sl.setLimits(0, 2, 0.1).setValue(Number(p.settings.appCodeLetterSpace) || 0).setDynamicTooltip()
+        .onChange(async (v) => { p.settings.appCodeLetterSpace = v; await p.saveSettings(); p.applyAppearance(); }));
+
+    new Setting(c).setName('代码块外观').setDesc('选「毛玻璃」会给代码块加一层磨砂底（模糊程度用主题默认的 2，本插件暂不提供调节）')
+      .addDropdown((d) => {
+        Object.keys(CODEBOX_STYLES).forEach((v) => d.addOption(v, CODEBOX_STYLES[v]));
+        d.setValue(p.settings.appCodeBoxStyle || '');
+        d.onChange(async (v) => { p.settings.appCodeBoxStyle = v; await p.saveSettings(); p.applyAppearance(); });
+      });
 
     c.createEl('h3', { text: '字体与字号' });
     new Setting(c).setName('正文字体').setDesc('**只作用阅读视图**的正文（编辑态不动 —— 改编辑态正文字体会打乱 CodeMirror 行高缓存导致错行）')

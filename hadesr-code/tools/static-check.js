@@ -17,8 +17,20 @@ const calls = new Map();
 const callRe = /\bthis\.([A-Za-z_$][\w$]*)\s*\(/g;
 while ((m = callRe.exec(src))) calls.set(m[1], (calls.get(m[1]) || 0) + 1);
 
-/* Plugin 基类自带的方法（不是我们定义的） */
-const base = new Set(['loadData','saveData','addSettingTab','addCommand','registerEvent','registerDomEvent','registerInterval','register','app','manifest','onload','onunload','containerEl']);
+/* Plugin / Modal / SettingTab 基类自带的方法（不是我们定义的）
+   2026-10-17 补：Modal 的 open/close/onOpen/onClose 与 SettingTab 的 display/hide —— 
+   写了新插件后误报 this.close() 未定义，才发现漏了。 */
+const base = new Set([
+  /* Plugin */
+  'loadData','saveData','addSettingTab','addCommand','registerEvent','registerDomEvent',
+  'registerInterval','register','app','manifest','onload','onunload','containerEl',
+  'addRibbonIcon','addStatusBarItem','registerView','registerMarkdownPostProcessor',
+  'registerMarkdownCodeBlockProcessor','addChild','removeChild','registerObsidianProtocolHandler',
+  /* Modal */
+  'open','close','onOpen','onClose','contentEl','titleEl','modalEl','scope','setTitle',
+  /* SettingTab */
+  'display','hide',
+]);
 const missing = [];
 for (const [n, c] of calls) if (!defs.has(n) && !base.has(n)) missing.push('this.' + n + '()  ×' + c);
 
