@@ -19,17 +19,26 @@ while ((m = callRe.exec(src))) calls.set(m[1], (calls.get(m[1]) || 0) + 1);
 
 /* Plugin / Modal / SettingTab 基类自带的方法（不是我们定义的）
    2026-10-17 补：Modal 的 open/close/onOpen/onClose 与 SettingTab 的 display/hide —— 
-   写了新插件后误报 this.close() 未定义，才发现漏了。 */
+   写了新插件后误报 this.close() 未定义，才发现漏了。
+   2026-10-18 补：**实例字段**也算定义 —— 构造函数里 `this.onSave = onSave` 之后再
+   `this.onSave()` 是合法写法，但原来只收集"类方法/函数声明"，会误报。 */
+const instField = /\bthis\.([A-Za-z_$][\w$]*)\s*=[^=]/g;
+while ((m = instField.exec(src))) defs.add(m[1]);
 const base = new Set([
   /* Plugin */
   'loadData','saveData','addSettingTab','addCommand','registerEvent','registerDomEvent',
   'registerInterval','register','app','manifest','onload','onunload','containerEl',
   'addRibbonIcon','addStatusBarItem','registerView','registerMarkdownPostProcessor',
   'registerMarkdownCodeBlockProcessor','addChild','removeChild','registerObsidianProtocolHandler',
+  /* 2026-10-18 补：行内补全要往编辑器里装 CodeMirror 扩展 */
+  'registerEditorExtension','registerEditorSuggest','registerHoverLinkSource',
   /* Modal */
   'open','close','onOpen','onClose','contentEl','titleEl','modalEl','scope','setTitle',
   /* SettingTab */
   'display','hide',
+  /* Modal / SuggestModal / FuzzySuggestModal（2026-10-18 补：写选笔记弹窗时误报 setPlaceholder） */
+  'setPlaceholder','setInstructions','setLimits','getItems','getItemText','onChooseItem',
+  'getSuggestions','renderSuggestion','onChooseSuggestion','limit','inputEl','emptyStateText',
 ]);
 const missing = [];
 for (const [n, c] of calls) if (!defs.has(n) && !base.has(n)) missing.push('this.' + n + '()  ×' + c);
