@@ -13,3 +13,6 @@ data.json
 # Python 字节码缓存（跑过 rebuild-theme.py 就可能生成）
 __pycache__/
 *.pyc
+
+# 开发 / 静态检查脚本（不进仓库；需要时临时拷回，也不会被提交）
+hadesr-code/tools/
