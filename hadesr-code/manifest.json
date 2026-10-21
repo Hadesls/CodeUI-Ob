@@ -1,7 +1,7 @@
 {
     "id": "hadesr-code",
     "name": "Hadesr Code",
-    "version": "2.29.3",
+    "version": "2.30.0",
     "minAppVersion": "1.0.0",
     "description": "代码块工具栏 + 表格增强 + 20 项主题外观（配色/文件树/箭头），零 CodeMirror 依赖。",
     "author": "Hadesr",

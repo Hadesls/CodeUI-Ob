@@ -1,40 +1,36 @@
 'use strict';
 
 /*
- * Hadesr Code — 零 CodeMirror 依赖
- *
- * 三条铁律（血泪）：
- *   1. 不 import 任何 @codemirror/*，不调用 registerEditorExtension
- *   2. 绝不修改编辑器 DOM（只读 DOM + 往 body 追加浮层 + 注入 CSS）
- *   3. 绝不改代码行的行高相关 CSS（font-size/line-height/padding 会打乱 CM6 行高缓存 → 错行）
- *
+ * Hadesr Code
  * 作者: Hadesr
+ *
+ * 约束：不依赖 CodeMirror 扩展；只读编辑器 DOM；不改代码行高相关样式。
  */
 
-const { Plugin, PluginSettingTab, Setting, Notice, MarkdownView } = require('obsidian');
+const { Plugin, PluginSettingTab, Setting, Notice, MarkdownView, setIcon } = require('obsidian');
 
 const PREFIX = 'Hadesr Code: ';
 
 /* ------------------------------------------------------------ 语言 */
 const LANGUAGES = [
   ['plaintext', 'Plain Text'], ['abap', 'ABAP'], ['ada', 'Ada'], ['apache', 'Apache'], ['asm', 'Assembly'],
-  ['awk', 'AWK'], ['bash', 'Bash'], ['basic', 'Basic'], ['c', 'C'], ['cisco', 'cisco'], ['csharp', 'C#'],
+  ['awk', 'AWK'], ['bash', 'Bash'], ['basic', 'Basic'], ['bat', 'bat'], ['batch', 'Batch'], ['c', 'C'], ['cisco', 'cisco'], ['csharp', 'C#'],
   ['cpp', 'C++'], ['clojure', 'Clojure'], ['cmake', 'CMake'], ['cmd', 'cmd'], ['coffee', 'CoffeeScript'], ['css', 'CSS'],
-  ['csv', 'CSV'], ['d', 'D'], ['dart', 'Dart'], ['diff', 'Diff'], ['dockerfile', 'Dockerfile'],
+  ['csv', 'CSV'], ['curl', 'curl'], ['d', 'D'], ['dart', 'Dart'], ['diff', 'Diff'], ['dockerfile', 'Dockerfile'], ['dos', 'DOS'],
   ['elixir', 'Elixir'], ['elm', 'Elm'], ['erlang', 'Erlang'], ['fortran', 'Fortran'], ['fsharp', 'F#'],
   ['gdscript', 'GDScript'], ['git', 'Git'], ['glsl', 'GLSL'], ['go', 'Go'], ['gradle', 'Gradle'],
   ['graphql', 'GraphQL'], ['groovy', 'Groovy'], ['h3c', 'h3c'], ['haskell', 'Haskell'], ['hcl', 'HCL'], ['html', 'HTML'], ['huawei', 'huawei'],
-  ['http', 'http'], ['ini', 'ini（conf、env）'], ['java', 'Java'], ['javascript', 'JavaScript'], ['json', 'JSON'],
+  ['http', 'http'], ['ini', 'ini（conf、env）'], ['ios', 'ios'], ['java', 'Java'], ['javascript', 'JavaScript'], ['json', 'JSON'],
   ['json5', 'JSON5'], ['julia', 'Julia'], ['kotlin', 'Kotlin'], ['latex', 'LaTeX'], ['less', 'Less'],
   ['linux', 'linux'], ['lisp', 'Lisp'], ['lua', 'Lua'], ['makefile', 'Makefile'], ['markdown', 'Markdown'], ['matlab', 'MATLAB'],
   ['network', 'network'], ['nginx', 'Nginx'], ['nim', 'Nim'], ['nix', 'Nix'], ['objectivec', 'Objective-C'], ['ocaml', 'OCaml'],
-  ['pascal', 'Pascal'], ['perl', 'Perl'], ['php', 'PHP'], ['powershell', 'powershell'], ['prolog', 'Prolog'],
+  ['pascal', 'Pascal'], ['perl', 'Perl'], ['php', 'PHP'], ['powershell', 'powershell'], ['prolog', 'Prolog'], ['ps1', 'ps1'], ['pwsh', 'pwsh'],
   ['protobuf', 'Protobuf'], ['pug', 'Pug'], ['python', 'Python'], ['r', 'R'], ['racket', 'Racket'],
   ['ruby', 'Ruby'], ['rust', 'Rust'], ['sas', 'SAS'], ['sass', 'Sass'], ['scala', 'Scala'], ['scheme', 'Scheme'],
-  ['scss', 'SCSS'], ['shell', 'Shell'], ['sql', 'SQL'], ['solidity', 'Solidity'], ['stylus', 'Stylus'], ['switch', 'switch'],
+  ['scss', 'SCSS'], ['sh', 'sh'], ['shell', 'Shell'], ['sql', 'SQL'], ['solidity', 'Solidity'], ['stylus', 'Stylus'], ['switch', 'switch'],
   ['swift', 'Swift'], ['tcl', 'Tcl'], ['toml', 'TOML'], ['typescript', 'TypeScript'], ['vbnet', 'VB.NET'],
-  ['verilog', 'Verilog'], ['vhdl', 'VHDL'], ['vim', 'Vim Script'], ['vue', 'Vue'], ['xml', 'XML'],
-  ['yaml', 'YAML'], ['zig', 'Zig'],
+  ['verilog', 'Verilog'], ['vhdl', 'VHDL'], ['vim', 'Vim Script'], ['vrp', 'vrp'], ['vue', 'Vue'], ['xml', 'XML'],
+  ['yaml', 'YAML'], ['zig', 'Zig'], ['zsh', 'zsh'],
 ];
 const LANG_MAP = {};
 LANGUAGES.forEach(function (l) { LANG_MAP[l[0]] = l[1]; });
@@ -49,7 +45,10 @@ function normLang(v) { let l = String(v || '').toLowerCase().trim(); if (!l) ret
 /* 「显示名」与「高亮 id」分离（用户诉求：bash / bat / cmd 要分开显示，别混成一个"Batch / CMD / BAT"）。
    - normLang() = 高亮 id：把别名归一化到 Prism/CodeMirror 认识的语法名（cmd→batch、sh→bash），**只用于上色/哈希/下载扩展名**。
    - dispLang() = 显示名：**只有真正的"简写"**（js→javascript、py→python…）才归一化，命令行别名（sh/zsh/cmd/bat/ps1/curl…）原样保留 → 工具栏与下拉里各自独立显示。 */
-const DISP_ALIAS = { js: 'javascript', jsx: 'javascript', ts: 'typescript', tsx: 'typescript', py: 'python', yml: 'yaml', md: 'markdown', rs: 'rust', rb: 'ruby', kt: 'kotlin', cs: 'csharp', 'c++': 'cpp', golang: 'go', htm: 'html', tf: 'hcl', mjs: 'javascript', cjs: 'javascript' };
+const DISP_ALIAS = { js: 'javascript', jsx: 'javascript', ts: 'typescript', tsx: 'typescript', py: 'python', yml: 'yaml', md: 'markdown', rs: 'rust', rb: 'ruby', kt: 'kotlin', cs: 'csharp', 'c++': 'cpp', golang: 'go', htm: 'html', tf: 'hcl', mjs: 'javascript', cjs: 'javascript',
+  text: 'plaintext', ps: 'powershell', node: 'javascript',
+  conf: 'ini', cfg: 'ini', env: 'ini', properties: 'ini', dotenv: 'ini',
+  console: 'bash', terminal: 'bash' };
 function dispLang(v) { const s = String(v || '').toLowerCase().trim(); if (!s) return 'plaintext'; return DISP_ALIAS[s] || s; }
 /* 依据背景亮度挑一个不刺眼的「选中高亮」颜色（深色块用浅色叠加，浅色块用深色叠加） */
 function selColor(bg) {
@@ -67,7 +66,7 @@ function langName(id) { return LANG_MAP[id] || (id ? id.charAt(0).toUpperCase() 
 function normHead(s) { return String(s == null ? '' : s).replace(/\s+/g, '').slice(0, 60); }
 const EXT = { javascript: 'js', typescript: 'ts', python: 'py', bash: 'sh', shell: 'sh', batch: 'bat', cmd: 'bat', json: 'json', html: 'html', css: 'css', scss: 'scss', yaml: 'yml', xml: 'xml', sql: 'sql', java: 'java', c: 'c', cpp: 'cpp', csharp: 'cs', go: 'go', rust: 'rs', php: 'php', ruby: 'rb', kotlin: 'kt', swift: 'swift', markdown: 'md', toml: 'toml', ini: 'ini', powershell: 'ps1', http: 'http', plaintext: 'txt' };
 
-/* ============================================================ 自定义正则高亮（v2.25.7）
+/* ============================================================ 自定义正则高亮
    要解决的问题：Obsidian 的语言库是**内置固定**的（阅读态 Prism 371 种 / 编辑态 CodeMirror 122 种），
    cmd / bat / 网络设备命令（switch / cisco / huawei…）都不在里面 —— fence 写这些名字一点颜色都没有。
    这里由插件自己做一层**轻量正则着色**：
@@ -144,8 +143,8 @@ const THEMES = {
 };
 
 const DEFAULTS = { theme: 'one-dark-pro', themes: {}, titles: {}, showToolbar: true, showInReading: true, reserveSpace: true, lineNumbers: true, barOpacity: 1, barHeight: 34, barFont: 12.5, codeFont: '', codeFontSize: 0, quoteBar: 'gold', tableStyle: 'blueB', tableBar: true, tableWidths: {}, fileLineNumbers: {}, fontBody: '', fontBodySize: 0, customCss: '', customHighlight: true, customRules: '',
-  /* 主题外观：复用 Blue Topaz 底子（已合成进主题 theme.css）里现成的 CSS，本插件只负责往 body 加/删类名。
-     默认值与 Blue Topaz 的 @settings 默认一致 —— 所以开启后观感跟装 Style Settings 时一模一样。 */
+  /* 主题外观：复用主题 theme.css 里现成的 CSS，本插件只负责往 body 加/删类名。
+     默认值与主题默认一致。 */
   appFolderColor: true, appFolderColorMode: 'folder-style-change-options-colorful-border',
   appFolderColorPalette: 'folder-colorful-six', appFolderIcons: true, appNoArrow: true, appNoRootIcon: true,
   /* 第二批：代码块样式 + 文件树细节。默认一律「不生效」，保证升级后观感不变，由用户自己开启 */
@@ -197,7 +196,7 @@ const FILE_BG_SHAPE_VALUES = ['file-shape-default', 'file-bg-rounded-rectangle',
 const CODEBOX_STYLES = { '': '默认', 'codebox-frosted-glass': '毛玻璃' };
 const CODEBOX_STYLE_VALUES = ['codebox-default-style', 'codebox-frosted-glass'];
 
-/* 整体配色方案（Blue Topaz 的 13 套）。'' = 不额外加类。
+/* 整体配色方案（13 套）。'' = 不额外加类。
    原理同样是"换一个 body class" —— 配色变量全在主题里，插件不负责颜色。 */
 const COLOR_SCHEMES = {
   '': '默认（不加类）',
@@ -226,7 +225,7 @@ const COLOR_SCHEME_VALUES = [
 /* ------------------------------------------------------------ 外观变体（引用条/表格）
    全部变体 CSS 常驻注入，用 body 类门控 —— 下拉只换类，即时生效。
    （教训：门控 CSS 不能条件注入，否则类挂上了没样式 = 点了没反应） */
-/* 引用块成套样式：竖条颜色 + 底色配对（用户定稿：换色=整套换）
+/* 引用块成套样式：竖条颜色 + 底色配对（换色 = 整套换）
    每档给两组值：
      c / bg  = 浅色模式（竖条色 / 底色，实色）
      dc / dbg= 深色模式（竖条略提亮；底色用**半透明叠色**，跟着暗背景走，不写死）
@@ -264,7 +263,7 @@ const LOOK_CSS = [
       D + ' :is(.markdown-rendered,.markdown-preview-view) blockquote::before{background-color:' + q.dc + ' !important;}' +
       D + ' :is(.markdown-rendered,.markdown-preview-view) blockquote{background-color:' + q.dbg + ' !important;' + darkColor + '}' +
       D + ' :is(.markdown-rendered,.markdown-preview-view) blockquote :not(pre)>code{background:rgba(160,160,160,.16) !important;color:#ff7a6b !important;}' +
-      /* ③ 编辑态：底色 + 竖线（Blue Topaz 用 .cm-blockquote-border 的 border-color；
+      /* ③ 编辑态：底色 + 竖线（用 .cm-blockquote-border 的 border-color；
          某些主题/版本用 ::before 画条或 border-inline-start，全部覆盖） */
       S + ' .markdown-source-view.mod-cm6 .HyperMD-quote{background-color:' + q.bg + ' !important;}' +
       D + ' .markdown-source-view.mod-cm6 .HyperMD-quote{background-color:' + q.dbg + ' !important;' + darkColor + '}' +
@@ -375,7 +374,7 @@ class CodeStudioPlugin extends Plugin {
       this.addSettingTab(new CodeStudioSettingTab(this.app, this));
 
       this.addCommand({ id: 'cs-next-theme', name: '切换代码主题（下一个）', callback: () => this.cycleTheme() });
-      this.addCommand({ id: 'cs-toggle-toolbar', name: '显示 / 隐藏代码块工具栏', callback: async () => { this.settings.showToolbar = !this.settings.showToolbar; await this.saveSettings(); this.hideAll(); this.markDirty(); } });
+      this.addCommand({ id: 'cs-toggle-toolbar', name: '显示 / 隐藏代码块工具栏', callback: async () => { this.settings.showToolbar = !this.settings.showToolbar; await this.saveSettings(); this.applyBarCss(); this.hideAll(); this.markDirty(); } });
       this.addCommand({ id: 'cs-cycle-file-ln', name: '本文件行号：跟随全局 / 强制开 / 强制关（循环）', callback: () => {
         const v = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (v) this.cycleFileLN(v);
@@ -414,7 +413,7 @@ class CodeStudioPlugin extends Plugin {
          这里只需低频兜底（原来 1.2s 太频繁，长笔记会持续占用主线程）。 */
       this.registerInterval(window.setInterval(() => this.refresh(), 2500));
 
-      /* 阅读/预览态：点「语言名胶囊」= 复制（v2.17.3 回到右侧胶囊方案）。
+      /* 阅读/预览态：点「语言名胶囊」= 复制。
          必须 document 捕获 + mousedown 拦截：实时预览里直接点 widget 会把块聚焦成编辑态，
          widget 随之销毁，挂在胶囊元素上的监听永远收不到 click —— 这就是「点了没反应」的根因。
          mousedown 阶段 preventDefault+stopPropagation 挡掉聚焦，click 阶段执行复制。 */
@@ -642,7 +641,7 @@ class CodeStudioPlugin extends Plugin {
          之前只在主流程尾部调用 → 关掉「显示代码块工具栏」时 refresh 提前 return，
          列宽永远应用不上；阅读视图也走的是不同分支，容易漏。现在收敛到这一处。 */
       try { this.decorateTables(view.contentEl || view.containerEl); } catch (e) { }
-      if (!this.settings.showToolbar) { this.hideAll(); this.ensureRestoreChip(); try { this.positionTableBar(); } catch (e) { } return; }
+      if (!this.settings.showToolbar) { this.hideAll(); this.removeRestoreChip(); try { this.positionTableBar(); } catch (e) { } return; }
       /* 阅读视图：CSS 选择器不可靠（可见卡片是 .el-pre 外层），直接用 JS 上色；阅读态是静态 DOM，改它零风险 */
       try {
         if (typeof view.getMode === 'function' && view.getMode() === 'preview') {
@@ -662,7 +661,11 @@ class CodeStudioPlugin extends Plugin {
       if (this._content !== content) { this._content = content; this.reobserve(content); }
 
       const runs = this.findRuns(content);
-      for (let i = 0; i < runs.length; i++) runs[i].lang = this.langOfRun(view, runs[i]);
+      for (let i = 0; i < runs.length; i++) {
+        const raw = this.langOfRun(view, runs[i]);
+        runs[i].lang = normLang(raw);
+        runs[i].disp = dispLang(raw);
+      }
       /* 行号：全局默认（settings.lineNumbers）+ 每个代码块单独覆盖（settings.blockLineNumbers[id]）
          id 必须走 blockIdOf（只读文档、不依赖 DOM），否则本块开关的覆盖值会匹配不上。
          性能：**没有任何「本块覆盖」时直接跳过 id 计算**（blockIdOf 含文档扫描 + getRange，
@@ -680,7 +683,7 @@ class CodeStudioPlugin extends Plugin {
             if (ev && ev.state && ev.posAtDOM) run.docBegin = ev.state.doc.lineAt(ev.posAtDOM(run.begin, 0)).number;
           } catch (e) { }
           const id = this.blockIdOf(view, run);
-          /* 两级解析（用户定稿的语义）：
+          /* 两级解析：
              1) 会话级覆盖（key = 该块的行 DOM 元素）—— 点击「本块行号」时立刻写入，优先命中
              2) 持久化覆盖 settings.blockLineNumbers[id]（按内容哈希）
              3) 全局开关 settings.lineNumbers —— 最终兜底「听调度」
@@ -758,7 +761,7 @@ class CodeStudioPlugin extends Plugin {
   }
   /* ===== 主题外观 =====
      只做一件事：按设置往 <body> 上加/删类名。
-     CSS 全部来自主题「Hadesr UI」（Blue Topaz 底子已合成进 theme.css，光彩色文件夹就 422 处规则），
+     CSS 全部来自主题「Hadesr UI」（已合成进 theme.css），
      本插件不新增任何样式 —— 所以观感与装 Style Settings 时逐像素一致，也不增加渲染负担。 */
   applyAppearance() {
     try {
@@ -892,20 +895,9 @@ class CodeStudioPlugin extends Plugin {
     return rc + '{' + (f ? 'font-family:' + f + ' !important;' : '') + (z ? 'font-size:' + z + 'px !important;' : '') + '}';
   }
 
-  /* ── http/https 代码块在阅读态没有 token ──────────────────────────────
-     编辑态用 CodeMirror（注册了 HTTP 模式，有颜色）；阅读态用 Prism —— Prism 本身有 http 语法，
-     但 Obsidian 这条渲染管线不会给它 token，于是整块"统一颜色"。
-     这里补一层**极轻量**的着色：只对 http 块、只做一次（data 标记幂等），
-     不影响其它语言，也不违反"阅读态不做逐元素功夫"的原则。 */
-  /* ── 阅读态的 http / REST 补色（v2.25.3 重做）───────────────────────────
-     为什么需要：编辑态的 http 有颜色（CodeMirror 的 stream 语法给了 .cm-* 类），
-     而阅读态用的是 Prism —— Obsidian 的 Prism 构建里**没有 http 语法**，于是遇到 ```http
-     会 fallback 到 clike / C 去高亮（用户原话：「阅读模式的 http 走 c 语言的标准」），
-     把 `:`、`/`、数字按 C 的注释/关键字/字符串乱染一遍。
-     现在的策略（两层）：
-       1) fence 语言**明确是 http / https / rest** → 无条件接管着色，把宿主那套 C token 整个换掉；
-       2) fence 是别的（或没标）→ 按**内容嗅探**，认出 http 请求/响应才着色（避免误伤 bash 里的 curl）。
-     用文本指纹做幂等；改完复位行号包装状态（否则行号拆行 DOM 会被抹掉且再也回不来）。 */
+  /* ── 阅读态的 http / REST 补色 ────────────────────────────────────────
+     Obsidian 的 Prism 没有 http 语法，会 fallback 到 C 高亮；
+     这里按 fence 语言或内容嗅探，接管 http 请求/响应的 token 着色。 */
   httpHighlight(code, raw, lang) {
     try {
       if (!code) return;
@@ -1069,7 +1061,7 @@ class CodeStudioPlugin extends Plugin {
     return html + escHtml(line.slice(pos));
   }
 
-  /* ── 运行时语言别名（v2.25.5）──────────────────────────────────────────
+  /* ── 运行时语言别名──────────────────────────────────────────
      背景（已从 Obsidian 主程序里核实）：Obsidian 的语言库是**内置固定**的 ——
        · 阅读态 = Prism（371 种）：有 batch / powershell / http / ini / bash，
          **没有** cmd / bat / ps1 / zsh / node / curl / conf / env（这些只是别名，Prism 里不存在）；
@@ -1111,16 +1103,9 @@ class CodeStudioPlugin extends Plugin {
   paintSig() { return 'v' + (this._paintVer || 1); }
   bumpPaint() { this._paintVer = (this._paintVer || 1) + 1; this._dirty = true; this.schedule(); }
 
-  /* ── 阅读视图上色（本项目唯一的阅读态实现）───────────────────────────────
-     设计要点（都是踩坑换来的，改动前请先读）：
-     1) **每块只刷一次**：块上记 _cbsSig = paintSig()；设置一变（换代码主题/行号）bumpPaint()
-        让版本号 +1 → 整篇重刷一次。原来每轮全量重刷，代码块一多就卡。
-     2) **卡片/胶囊节点引用缓存在块上**（_cbsCard / _cbsFlair），避免每轮 querySelector
-        与向上查找 —— 滚动时这个函数每帧都会被调用，必须极廉价。
-     3) **视口裁剪**：只处理视口 ±2000px 内的块；远处的跳过并计入 _readPending，
-        等滚进视口（滚动触发）再补 —— 长文"看到哪刷到哪"。
-     4) 配色**不在 JS 里做**：全部靠 applyTheme() 注入的官方 --code-* 变量 + 短 .token.X 规则。
-        逐 span 写 inline 颜色是阅读态卡顿的根因，已彻底移除。 */
+  /* ── 阅读视图上色 ──────────────────────────────────────────────────────
+     要点：每块只刷一次；卡片/胶囊引用缓存在块上；只处理视口附近；
+     配色靠 CSS 变量，不在 JS 里逐 span 写颜色。 */
   applyReadingTheme(view) {
     try {
       if (!this.settings.showInReading) return;
@@ -1324,7 +1309,7 @@ class CodeStudioPlugin extends Plugin {
       this._runLNQueue(true);
     } catch (e) { }
   }
-  /* v2.25.2：调度从 requestIdleCallback 改成 rAF + setTimeout。
+  /* 调度：rAF + setTimeout。
      原因（用户反馈「编辑转阅读后行号不出现，要再切一次文件才出来」）：
      idle 回调在宿主正忙的时候（切模式那几秒）会被一直推到 timeout 才执行，而每片只做 4 个块
      → 一篇多代码的笔记要好几秒行号才陆续出现，体感就是"根本没出来"。
@@ -1416,11 +1401,8 @@ class CodeStudioPlugin extends Plugin {
     } catch (e) { }
   }
 
-  /* 阅读/预览态（v2.17.3 用户定稿）：
-     用户已把主题从 Blue Topaz 换成**默认主题**——那个居中大写标签是主题的 `pre::before` 伪元素，
-     换主题后自然消失，不再需要为它让位。
-     所以复制回到**右侧的「语言名胶囊」**（= 上一版的样子）：右上角、显示语言名、点它即复制。
-     我们自建胶囊替代原生角标，避免重复；原生 `.code-block-flair` / 复制按钮 / 编辑铅笔继续隐藏。 */
+  /* 阅读/预览态：右上角「语言名胶囊」，点它即复制。
+     自建胶囊替代原生角标，避免重复；原生 `.code-block-flair` / 复制按钮 / 编辑铅笔继续隐藏。 */
   _readingCopy(card, pre) {
     try {
       if (!card) return;
@@ -1433,7 +1415,7 @@ class CodeStudioPlugin extends Plugin {
         const btns = scopes[s].querySelectorAll(hideSels);
         for (let i = 0; i < btns.length; i++) btns[i].style.setProperty('display', 'none', 'important');
       }
-      /* 移除上一版（v2.17.2）遗留的左上角图标按钮 */
+      /* 移除遗留的左上角图标按钮 */
       const oldBtn = card.querySelectorAll('.cbs-copy');
       for (let i = 0; i < oldBtn.length; i++) oldBtn[i].remove();
       /* 右侧「语言名胶囊」：若不存在则创建（幂等：宿主重建后每轮刷新会重新找到/创建），点它即复制 */
@@ -1488,14 +1470,14 @@ class CodeStudioPlugin extends Plugin {
           const t = ln.text;
           if (/^\s*(?:```|~~~)/.test(t)) {
             const m = /^\s*(?:```|~~~)\s*([\w+#.-]*)/.exec(t);
-            return this.parseFenceLang(m && m[1] ? m[1] : '');
+            return (m && m[1]) ? m[1] : '';   /* 返回原始写法，保留 cmd / bat / bash 别名 */
           }
           if (ln.number <= 1) break;
           ln = doc.line(ln.number - 1);
         }
       }
     } catch (e) { }
-    return run.lang;
+    return run.disp || run.lang;
   }
 
   findRuns(content) {
@@ -1617,7 +1599,20 @@ class CodeStudioPlugin extends Plugin {
     try {
       while (sel.firstChild) sel.removeChild(sel.firstChild);
       sel.appendChild(frag.cloneNode(true));
-      if (val !== undefined && val !== null) sel.value = val;
+      if (val !== undefined && val !== null) {
+        /* 当前语言可能是个别名（sh / bat / ps1 / curl…），不在全量列表里：
+           补一个当前项，避免下拉展开后变成空白或跳到第一项 */
+        let hit = false;
+        for (let i = 0; i < sel.options.length; i++) {
+          if (sel.options[i].value === val) { hit = true; break; }
+        }
+        if (!hit) {
+          const o = document.createElement('option');
+          o.value = val; o.textContent = langName(val);
+          sel.appendChild(o);
+        }
+        sel.value = val;
+      }
     } catch (e) { }
   }
   /* 单选占位：只放当前项（未填充状态） */
@@ -1707,8 +1702,10 @@ class CodeStudioPlugin extends Plugin {
     /* 每次刷新都同步「行数 / 语言 / 主题」—— 杜绝工具栏显示和实际不一致 */
     bar._sync = function (r) {
       try {
-        if (langSel._cbsFilled) langSel.value = r.lang;
-        else { const o = langSel.firstChild; if (o) { o.value = r.lang; o.textContent = langName(r.lang); } }
+        /* 显示用 disp（保留 cmd / bat / bash 等别名）；高亮仍用归一化的 r.lang */
+        const disp = r.disp || r.lang;
+        if (langSel._cbsFilled) langSel.value = disp;
+        else { const o = langSel.firstChild; if (o) { o.value = disp; o.textContent = langName(disp); } }
         if (thSel._cbsFilled) thSel.value = self.settings.theme;
         else { const o = thSel.firstChild; if (o) { o.value = self.settings.theme; o.textContent = (THEMES[self.settings.theme] || {}).name || self.settings.theme; } }
         lc.textContent = (r.count || 0) + ' 行';
@@ -1719,26 +1716,53 @@ class CodeStudioPlugin extends Plugin {
     return bar;
   }
 
+  /* 移动端底部工具栏的 top（缓存元素，避免每帧 querySelector） */
+  bottomBarTop(vh) {
+    try {
+      if (!document.body.classList.contains('is-mobile')) return 0;
+      let bt = this._btEl;
+      if (!bt || !bt.isConnected) {
+        bt = this._btEl = document.querySelector('.mobile-toolbar, .mobile-navbar, .mobile-bottom-bar');
+      }
+      if (!bt) return 0;
+      const r = bt.getBoundingClientRect();
+      return (r.height > 0 && r.top > vh * 0.5) ? r.top : 0;
+    } catch (e) { return 0; }
+  }
+
   position() {
     try {
       if (!this.overlays || !this.overlays.size) return;
       const H = this.settings.barHeight || 34;
       const vh = window.innerHeight, vw = window.innerWidth;
+      /* 移动端底部工具栏（.mobile-toolbar）会盖住屏幕底部：把可用底边抬到它上方 */
+      let bottomLimit = vh - 6;
+      const btTop = this.bottomBarTop(vh);
+      if (btTop) bottomLimit = Math.min(bottomLimit, btTop - 6);
       this.overlays.forEach(function (ov) {
         const rect = ov._run ? this.runRect(ov._run) : null;
         /* 编辑器内容区的上边界：工具栏是 position:fixed，越过它就会盖住 tab 栏 / 面包屑 */
         let cTop = 0;
-        try { const ce = ov._view && (ov._view.contentEl || ov._view.containerEl); if (ce) cTop = ce.getBoundingClientRect().top; } catch (e) { }
+        try {
+          const ce = ov._view && (ov._view.contentEl || ov._view.containerEl);
+          if (ce) cTop = ce.getBoundingClientRect().top;
+          /* 移动端顶栏浮在内容上：用顶栏底边兜底，避免工具栏被压在顶栏下面 */
+          if (document.body.classList.contains('is-mobile')) {
+            const hd = ov._view && (ov._view.headerEl || (ov._view.containerEl && ov._view.containerEl.querySelector('.view-header')));
+            const hb = hd ? hd.getBoundingClientRect().bottom : 0;
+            if (hb > cTop) cTop = hb;
+          }
+        } catch (e) { }
         if (!rect || rect.bottom < -40 || rect.top > vh + 40 || (cTop > 0 && rect.bottom < cTop + 4)) { ov.style.display = 'none'; return; }
         const w = Math.max(200, Math.min(rect.width, vw - 16));
         const left = Math.min(Math.max(6, rect.left), Math.max(6, vw - w - 6));
         let top = rect.top + 2;
         if (!this.settings.reserveSpace) top = rect.top - H - 3;   /* 没预留空间就浮到块上方 */
         /* 关键：工具栏一旦越过编辑器顶边就**直接隐藏**，绝不吸附钉在顶边。
-           吸附会压在代码块前几行上，看起来像「代码块被切开」（v2.13 的 bug）。 */
+           吸附会压在代码块前几行上，看起来像「代码块被切开」。 */
         if (cTop > 0 && top < cTop) { ov.style.display = 'none'; return; }
         ov.style.display = 'flex';
-        if (top + H > vh - 6) top = Math.max(6, vh - H - 6);
+        if (top + H > bottomLimit) { ov.style.display = 'none'; return; }
         ov.style.left = left + 'px';
         ov.style.top = top + 'px';
         ov.style.width = w + 'px';
@@ -1909,8 +1933,21 @@ class CodeStudioPlugin extends Plugin {
       if (left + w > vw - 8) left = Math.max(8, vw - w - 8);
       let top2 = rect.top - H - 2;
       let cTop = 0;
-      try { cTop = view.contentEl.getBoundingClientRect().top; } catch (e) { }
+      try {
+        cTop = view.contentEl.getBoundingClientRect().top;
+        /* 移动端顶栏浮在内容上：用顶栏底边兜底 */
+        if (document.body.classList.contains('is-mobile')) {
+          const hd = view.headerEl || (view.containerEl && view.containerEl.querySelector('.view-header'));
+          const hb = hd ? hd.getBoundingClientRect().bottom : 0;
+          if (hb > cTop) cTop = hb;
+        }
+      } catch (e) { }
       if (cTop > 0 && top2 < cTop) top2 = rect.top + 2;   /* 顶边空间不够就压到首行上沿内侧 */
+      /* 移动端底部工具栏会盖住屏幕底部：把表格工具栏抬到它上方 */
+      let bottomLimit2 = window.innerHeight - 8;
+      const btTop2 = this.bottomBarTop(window.innerHeight);
+      if (btTop2) bottomLimit2 = Math.min(bottomLimit2, btTop2 - 6);
+      if (top2 + H > bottomLimit2) top2 = Math.max(8, bottomLimit2 - H);
       this._tbar.style.display = 'flex';
       this._tbar.style.left = left + 'px';
       this._tbar.style.top = top2 + 'px';
@@ -2107,27 +2144,6 @@ class CodeStudioPlugin extends Plugin {
     } catch (e) { }
   }
 
-  /* 隐藏全部工具栏后，右下角留一个「恢复」按钮，避免把自己关在门外 */
-  ensureRestoreChip() {
-    try {
-      if (this._chip) return;
-      const self = this;
-      const chip = document.createElement('button');
-      chip.className = 'cbs-chip';
-      chip.innerHTML = ICON.eye + '<span>显示代码块工具栏</span>';
-      chip.addEventListener('click', function () {
-        try {
-          self.settings.showToolbar = true;
-          self.saveSettings();
-          self.removeRestoreChip();
-          self.markDirty();
-          new Notice(PREFIX + '已恢复代码块工具栏');
-        } catch (e) { }
-      });
-      document.body.appendChild(chip);
-      this._chip = chip;
-    } catch (e) { }
-  }
   removeRestoreChip() { try { if (this._chip) { this._chip.remove(); this._chip = null; } } catch (e) { } }
 
   /* -------------------------------------------------- ⋯ 菜单 */
@@ -2155,7 +2171,7 @@ class CodeStudioPlugin extends Plugin {
     /* ---- 全局：统一的调度开关。
        打开/关闭会**同时清空所有本块覆盖**（会话级 + 持久化），
        也就是「不管你本块设置啥，全局都会开或者关」。 */
-    /* 行号（全部）：本篇文件的统一调度开关 —— 和 v2.17 定稿一致：
+    /* 行号（全部）：本篇文件的统一调度开关 —— 
        切换它时**清空所有本块覆盖**，所以「不管你本块设了什么，这一篇都会统一开/关」。
        本块行号则是它之上的覆盖（全局开了我可以关自己、全局关了我可以开自己）。 */
     const allLabel = function () { return (self.lnForFile(view) ? '✓ ' : '') + '行号（全部）'; };
@@ -2198,13 +2214,15 @@ class CodeStudioPlugin extends Plugin {
     });
     div();
     row(ICON.copy, '复制为 Markdown', function () {
-      self.copyText('```' + run.lang + '\n' + self.codeOf(view, run) + '\n```');
+      const r = (bar && bar._run) || run;
+      self.copyText('```' + (r.disp || r.lang) + '\n' + self.codeOf(view, r) + '\n```');
     });
     row(ICON.down, '下载为文件', function () {
-      const txt = self.codeOf(view, run);
+      const r = (bar && bar._run) || run;
+      const txt = self.codeOf(view, r);
       const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-      a.download = 'code.' + (EXT[normLang(run.lang)] || 'txt');
+      a.download = 'code.' + (EXT[normLang(r.disp || r.lang)] || 'txt');
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(function () { URL.revokeObjectURL(a.href); }, 3000);
     });
@@ -2240,6 +2258,18 @@ class CodeStudioPlugin extends Plugin {
           new Notice(PREFIX + '已同步语言到全文：' + langName(target || 'plaintext') + (changed ? '（' + changed + ' 个代码块）' : '（没有可改的代码块）'));
         }
       } catch (e) { new Notice(PREFIX + '同步失败'); }
+    });
+
+    div();
+    row(ICON.eye, '隐藏全部代码块工具栏', function () {
+      self.settings.showToolbar = false;
+      self.saveSettings();
+      self.applyBarCss();
+      self.hideAll();
+      self.removeRestoreChip();
+      self.markDirty();
+      self.closeFloating();
+      new Notice(PREFIX + '代码块工具栏已全部隐藏 —— 可在「设置 → Hadesr Code → 代码主题与工具栏」重新打开', 8000);
     });
 
     document.body.appendChild(menu);
@@ -2436,7 +2466,7 @@ class CodeStudioPlugin extends Plugin {
          每条规则要和全文档 DOM 重匹配（新渲染的段落"白了再亮"），还漏类导致"颜色变少"。
          现在换成：设 12 个 --code-* 变量 + 少量官方没细分的补充，一条长选择器都不要。 */
       /* 变量必须挂在**真正渲染代码的容器**上：
-         主题（Blue Topaz）是用 `body.code-theme-*` 定义 --code-* 的，和我们一样挂在 body 上，
+         主题是用 `body.code-theme-*` 定义 --code-* 的，和我们一样挂在 body 上，
          同层就变成"谁在后面谁赢" → 实测出现"编辑态跟随、阅读态永远是主题默认色"。
          挂在容器上时，它是**最近的声明**，无论主题在 body/:root 上写什么都不影响。 */
       if (!follow) lines.push('body,.markdown-rendered,.markdown-preview-view,'
@@ -2453,7 +2483,7 @@ class CodeStudioPlugin extends Plugin {
         '--code-operator:' + t.op + ' !important;' +
         '--code-punctuation:' + t.op + ' !important;' +
         '--code-important:' + t.kw + ' !important;' +
-        /* 主题（Blue Topaz 底子）自己也有一套变量：--background-code 是它给代码块上底色的来源。
+        /* 主题自己也有一套变量：--background-code 是它给代码块上底色的来源。
            只改 --code-background 不够，浅色模式下会漏出浅底（表现为"浅底 + 浅色字"看不清）。 */
         '--background-code:' + t.bg + ' !important;' +
         '--code-block-background:' + t.bg + ' !important;' +
@@ -2508,7 +2538,9 @@ class CodeStudioPlugin extends Plugin {
     try {
       if (!this._barCss) { this._barCss = document.createElement('style'); this._barCss.id = 'hadesr-code-bar'; document.head.appendChild(this._barCss); }
       const out = [];
-      if (this.settings.reserveSpace) {
+      /* 只有「工具栏显示 + 预留空间」都开时才留顶部空位；
+         工具栏隐藏后不再预留，代码块直接和上下文拼接，避免上方多一条空白 */
+      if (this.settings.reserveSpace && this.settings.showToolbar) {
         const H = (this.settings.barHeight || 34) + 4;
         out.push('.markdown-source-view.mod-cm6 .cm-content .cm-line:not(.HyperMD-codeblock) + .cm-line.HyperMD-codeblock{padding-top:' + H + 'px !important;border-radius:10px 10px 0 0;}');
       }
@@ -2552,14 +2584,79 @@ class CodeStudioPlugin extends Plugin {
 
 /* ------------------------------------------------------------ 设置 */
 class CodeStudioSettingTab extends PluginSettingTab {
-  constructor(app, plugin) { super(app, plugin); this.plugin = plugin; }
-  display() {
-    const c = this.containerEl, p = this.plugin;
-    c.empty();
-    const ver = (p.manifest && p.manifest.version) ? '  v' + p.manifest.version : '';
-    c.createEl('h2', { text: 'Hadesr Code 设置' + ver });
-    c.createEl('p', { text: '编辑/实时预览里，每个代码块顶部有一条工具栏；阅读视图套用同一套主题（只读、更美观）。零 CodeMirror 依赖，不会影响编辑器。', cls: 'setting-item-description' });
+  constructor(app, plugin) { super(app, plugin); this.plugin = plugin; this._page = ''; }
 
+  /* 一级目录 + 二级页：只切 UI，不改设置逻辑 */
+  display() {
+    const { containerEl } = this;
+    containerEl.empty();
+    containerEl.addClass('cbs-settings');
+    if (!this._page) { this._renderHome(containerEl); return; }
+    this._renderBack(containerEl, this._page);
+    if (this._page === 'theme') this._pageTheme(containerEl);
+    else if (this._page === 'table') this._pageTable(containerEl);
+    else if (this._page === 'scheme') this._pageScheme(containerEl);
+    else if (this._page === 'files') this._pageFiles(containerEl);
+    else if (this._page === 'code') this._pageCode(containerEl);
+    else if (this._page === 'font') this._pageFont(containerEl);
+    else if (this._page === 'custom') this._pageCustom(containerEl);
+    else this._pageAbout(containerEl);
+  }
+
+  _go(page) { this._page = page || ''; this.display(); try { this.containerEl.scrollTop = 0; } catch (e) { } }
+
+  _renderHome(c) {
+    const p = this.plugin;
+    const ver = (p.manifest && p.manifest.version) ? p.manifest.version : '';
+    const head = c.createDiv({ cls: 'cbs-head' });
+    const logo = head.createDiv({ cls: 'cbs-logo', text: 'Hadesr Code' });
+    logo.title = '关于 Hadesr Code';
+    logo.setAttribute('role', 'button');
+    logo.setAttribute('aria-label', '关于 Hadesr Code');
+    logo.onclick = () => this._go('about');
+    head.createDiv({ cls: 'cbs-meta', text: 'v' + ver + ' · 作者 Hadesr' });
+    head.createDiv({ cls: 'cbs-hint', text: '代码块 / 表格 / 主题外观' });
+
+    const s = p.settings;
+    const themeName = (THEMES[s.theme] || {}).name || s.theme;
+    const quoteName = (LOOK_QUOTE[s.quoteBar] || {}).name || '默认';
+    const tableName = (LOOK_TABLE[s.tableStyle] || {}).name || '默认';
+    const schemeName = COLOR_SCHEMES[s.appColorScheme] || '默认';
+    const rows = [
+      { id: 'scheme', icon: 'paint-bucket', name: '整体配色', desc: schemeName },
+      { id: 'files', icon: 'folder-tree', name: '文件树外观', desc: (s.appFolderColor ? '彩色文件夹' : '默认文件夹') + (s.appFolderIcons ? ' · 文件图标' : '') },
+      { id: 'theme', icon: 'palette', name: '代码主题与工具栏', desc: themeName + ' · 工具栏' + (s.showToolbar ? '开' : '关') + ' · ' + s.barHeight + 'px' },
+      { id: 'code', icon: 'code-2', name: '代码块外观', desc: (s.appCodeWrapReading ? '阅读换行' : '阅读不换行') + (s.appCodeNoIndentLine ? ' · 无参考线' : '') },
+      { id: 'table', icon: 'table', name: '表格与引用块', desc: '引用 ' + quoteName + ' · 表格 ' + tableName },
+      { id: 'font', icon: 'type', name: '字体与字号', desc: '正文 ' + (s.fontBodySize || '跟随') + ' · 代码 ' + (s.codeFontSize || '跟随') },
+      { id: 'custom', icon: 'braces', name: '自定义', desc: 'CSS ' + (s.customCss ? '已填' : '空') + ' · 高亮' + (s.customHighlight !== false ? '开' : '关') },
+    ];
+
+    const self = this;
+    rows.forEach(function (r) {
+      const row = c.createDiv({ cls: 'cbs-nav-row' });
+      const ic = row.createDiv({ cls: 'cbs-nav-icon' });
+      setIcon(ic, r.icon);
+      const tx = row.createDiv({ cls: 'cbs-nav-text' });
+      tx.createEl('div', { cls: 'cbs-nav-name', text: r.name });
+      tx.createEl('div', { cls: 'cbs-nav-desc', text: r.desc });
+      const ar = row.createDiv({ cls: 'cbs-nav-arrow' });
+      setIcon(ar, 'chevron-right');
+      row.onclick = function () { self._go(r.id); };
+    });
+  }
+
+  _renderBack(c, page) {
+    const title = { theme: '代码主题与工具栏', table: '表格与引用块', scheme: '整体配色', files: '文件树外观', code: '代码块外观', font: '字体与字号', custom: '自定义', about: '关于' }[page] || '设置';
+    const back = c.createDiv({ cls: 'cbs-back' });
+    const ic = back.createSpan({ cls: 'cbs-back-icon' });
+    setIcon(ic, 'chevron-left');
+    back.createSpan({ cls: 'cbs-back-title', text: title });
+    back.onclick = () => this._go('');
+  }
+
+  _pageTheme(containerEl) {
+    const c = containerEl, p = this.plugin;
     new Setting(c).setName('代码主题').addDropdown((d) => {
       Object.keys(THEMES).forEach((id) => d.addOption(id, THEMES[id].name));
       d.setValue(p.settings.theme); d.onChange((v) => p.setTheme(v));
@@ -2567,7 +2664,7 @@ class CodeStudioSettingTab extends PluginSettingTab {
     new Setting(c).setName('阅读视图也套用主题').addToggle((t) => t.setValue(p.settings.showInReading)
       .onChange(async (v) => { p.settings.showInReading = v; await p.saveSettings(); p.applyTheme(); }));
     new Setting(c).setName('显示代码块工具栏').addToggle((t) => t.setValue(p.settings.showToolbar)
-      .onChange(async (v) => { p.settings.showToolbar = v; await p.saveSettings(); p.hideAll(); p.markDirty(); }));
+      .onChange(async (v) => { p.settings.showToolbar = v; await p.saveSettings(); p.applyBarCss(); p.hideAll(); p.markDirty(); }));
     new Setting(c).setName('工具栏高度 (px)').addSlider((sl) => sl.setLimits(28, 44, 1).setValue(p.settings.barHeight).setDynamicTooltip()
       .onChange(async (v) => { p.settings.barHeight = v; await p.saveSettings(); p.hideAll(); p.applyBarCss(); p.markDirty(); }));
     new Setting(c).setName('为标题栏预留空间').setDesc('让工具栏「嵌进」代码块顶部（像语雀）。若因此出现行错位，关掉它即可（工具栏会浮在块上方）').addToggle((t) => t.setValue(p.settings.reserveSpace)
@@ -2577,7 +2674,10 @@ class CodeStudioSettingTab extends PluginSettingTab {
     new Setting(c).setName('工具栏不透明度').addSlider((sl) => sl.setLimits(0.5, 1, 0.02).setValue(p.settings.barOpacity).setDynamicTooltip()
       .onChange(async (v) => { p.settings.barOpacity = v; await p.saveSettings(); p.overlays.forEach(function (ov) { ov.style.opacity = String(v); }); }));
 
-    c.createEl('h3', { text: '外观样式' });
+  }
+
+  _pageTable(containerEl) {
+    const c = containerEl, p = this.plugin;
     new Setting(c).setName('引用块颜色').setDesc('⚠ 需配套主题「Hadesr UI」：竖条与粉底由主题提供，本项只负责整套换色。两件套请一起拷贝、联动使用（单装本插件时阅读视图不会有竖条）').addDropdown((d) => {
       Object.keys(LOOK_QUOTE).forEach((id) => d.addOption(id, LOOK_QUOTE[id].name));
       d.setValue(p.settings.quoteBar || 'gold');
@@ -2601,18 +2701,24 @@ class CodeStudioSettingTab extends PluginSettingTab {
       new Notice(PREFIX + '已清除所有表格列宽记忆');
     }));
 
-    c.createEl('h3', { text: '主题外观 · 整体配色' });
+  }
+
+  _pageScheme(containerEl) {
+    const c = containerEl, p = this.plugin;
     c.createEl('p', { text: '换一整套配色（标题 / 正文 / 背景 / 侧栏）。颜色值全在主题里，插件只换一个类名；选了不满意随时切回「默认」。', cls: 'setting-item-description' });
 
-    new Setting(c).setName('配色方案').setDesc('13 套可选（由 Blue Topaz 社区贡献）')
+    new Setting(c).setName('配色方案').setDesc('13 套可选')
       .addDropdown((d) => {
         Object.keys(COLOR_SCHEMES).forEach((v) => d.addOption(v, COLOR_SCHEMES[v]));
         d.setValue(p.settings.appColorScheme || '');
         d.onChange(async (v) => { p.settings.appColorScheme = v; await p.saveSettings(); p.applyAppearance(); });
       });
 
-    c.createEl('h3', { text: '主题外观 · 文件树' });
-    c.createEl('p', { text: '只对主题「Hadesr UI」有效 —— 样式是 Blue Topaz 底子自带的，本插件只当开关（不新增 CSS，不会变卡，观感与原来一致）。原来的 Style Settings 可以卸掉了。', cls: 'setting-item-description' });
+  }
+
+  _pageFiles(containerEl) {
+    const c = containerEl, p = this.plugin;
+    c.createEl('p', { text: '只对主题「Hadesr UI」有效 —— 样式由主题提供，本插件只当开关（不新增 CSS，不会变卡，观感与原来一致）。原来的 Style Settings 可以卸掉了。', cls: 'setting-item-description' });
 
     new Setting(c).setName('彩色文件夹').setDesc('给左侧文件树的每个文件夹套一套配色')
       .addToggle((t) => t.setValue(!!p.settings.appFolderColor)
@@ -2678,14 +2784,17 @@ class CodeStudioSettingTab extends PluginSettingTab {
         d.onChange(async (v) => { p.settings.appFileBgShape = v; await p.saveSettings(); p.applyAppearance(); });
       });
 
-    c.createEl('h3', { text: '主题外观 · 代码块' });
+  }
+
+  _pageCode(containerEl) {
+    const c = containerEl, p = this.plugin;
     c.createEl('p', { text: '这几项只影响代码块的「行为/样式」，不影响配色 —— 配色仍由上面的「代码主题」管（9 套）。默认全关，开启后才生效。', cls: 'setting-item-description' });
 
     new Setting(c).setName('取消缩进参考线').setDesc('去掉代码块里那几条竖着的缩进参考线')
       .addToggle((t) => t.setValue(!!p.settings.appCodeNoIndentLine)
         .onChange(async (v) => { p.settings.appCodeNoIndentLine = v; await p.saveSettings(); p.applyAppearance(); }));
 
-    new Setting(c).setName('阅读视图代码换行').setDesc('长行自动折行，不用横向滚动（Blue Topaz 原本默认开，这里默认关，你按需打开）')
+    new Setting(c).setName('阅读视图代码换行').setDesc('长行自动折行，不用横向滚动（这里默认关，按需打开）')
       .addToggle((t) => t.setValue(!!p.settings.appCodeWrapReading)
         .onChange(async (v) => { p.settings.appCodeWrapReading = v; await p.saveSettings(); p.applyAppearance(); }));
 
@@ -2708,7 +2817,10 @@ class CodeStudioSettingTab extends PluginSettingTab {
         d.onChange(async (v) => { p.settings.appCodeBoxStyle = v; await p.saveSettings(); p.applyAppearance(); });
       });
 
-    c.createEl('h3', { text: '字体与字号' });
+  }
+
+  _pageFont(containerEl) {
+    const c = containerEl, p = this.plugin;
     new Setting(c).setName('正文字体').setDesc('**只作用阅读视图**的正文（编辑态不动 —— 改编辑态正文字体会打乱 CodeMirror 行高缓存导致错行）')
       .addDropdown((d) => { d.addOption('', '跟随主题'); d.addOption('system-ui, -apple-system, "PingFang SC", sans-serif', '系统默认 sans-serif'); d.addOption('"Songti SC", "SimSun", serif', '宋体 / Songti'); d.addOption('"Source Han Sans SC", "Noto Sans CJK SC", sans-serif', '思源黑体 / Source Han Sans'); d.addOption('"LXGW WenKai", "霞鹜文楷", serif', '霞鹜文楷 / LXGW WenKai'); d.addOption('"Sarasa Gothic SC", "更纱黑体 SC", sans-serif', '更纱黑体 / Sarasa'); d.setValue(String(p.settings.fontBody || '')); d.onChange(async (v) => { p.settings.fontBody = v; await p.saveSettings(); p.applyTheme(); }); });
     new Setting(c).setName('正文字号').setDesc('阅读视图正文字号（编辑态跟随 Obsidian 设置）')
@@ -2718,7 +2830,10 @@ class CodeStudioSettingTab extends PluginSettingTab {
     new Setting(c).setName('代码块字号').setDesc('阅读视图代码块字号（编辑态字号不动 —— 会错行）')
       .addDropdown((d) => { d.addOption('0', '跟随主题'); d.addOption('13', '13'); d.addOption('14', '14'); d.addOption('15', '15'); d.addOption('16', '16'); d.addOption('17', '17'); d.addOption('18', '18'); d.addOption('20', '20'); d.setValue(String(p.settings.codeFontSize || 0)); d.onChange(async (v) => { p.settings.codeFontSize = Number(v); await p.saveSettings(); p.applyTheme(); }); });
 
-    c.createEl('h3', { text: '自定义 CSS' });
+  }
+
+  _pageCustom(containerEl) {
+    const c = containerEl, p = this.plugin;
     new Setting(c).setName('附加样式').addTextArea((t) => {
       t.setPlaceholder('.cbs-bar { box-shadow: none; }').setValue(p.settings.customCss)
         .onChange(async (v) => { p.settings.customCss = v; await p.saveSettings(); p.applyCustom(); });
@@ -2751,6 +2866,11 @@ class CodeStudioSettingTab extends PluginSettingTab {
         t.inputEl.rows = 8; t.inputEl.style.width = '100%';
         try { t.inputEl.style.fontFamily = 'var(--font-monospace)'; } catch (e) { }
       });
+  }
+
+  _pageAbout(containerEl) {
+    containerEl.createEl('p', { cls: 'setting-item-description', text: 'Hadesr Code · 作者 Hadesr · v' + ((this.plugin.manifest && this.plugin.manifest.version) || '') });
+    containerEl.createEl('p', { cls: 'setting-item-description', text: '编辑/实时预览里，每个代码块顶部有一条工具栏；阅读视图套用同一套主题（只读、更美观）。零 CodeMirror 依赖。' });
   }
 }
 

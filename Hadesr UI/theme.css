@@ -1,22 +1,8 @@
 /* ============================================================================
-   Hadesr UI   v1.5.0   ——  Obsidian 主题（成品，Obsidian 加载的就是本文件）
+   Hadesr UI   v1.5.0   ——  Obsidian 主题
+   作者: Hadesr
    ----------------------------------------------------------------------------
-   组成：[1] 底子主题 Blue Topaz by WhyI & Pkmer（原样保留，占本文件绝大部分）
-         [2] Hadesr UI 覆盖层（追加在文件末尾，靠 !important 与后置顺序生效）
-   覆盖层源码单独存放于同目录 overlay.src.css（Obsidian 忽略该文件）；
-   改外观请改 overlay.src.css，改完按其中的命令重新合并本文件。
-   ----------------------------------------------------------------------------
-   ★ 需与插件 Hadesr Code（v2.26.0+）配套使用，两件套一起拷贝、联动使用：
-     · 本主题提供引用块「结构」（4px 竖条 / 底色 / 强制换行）、行内代码、分割线、
-       任务清单已完成项删除线、去掉底子主题自带的代码块装饰。
-     · 本主题提供「明暗适配」：上述几项的颜色按 theme-light / theme-dark 切换。
-     · 插件提供引用块「换色」（5 档下拉，浅色/深色各一套值）、表格配色（6 档，同样双份）、
-       全部表格功能与代码块工具栏。
-     · 只装其一都会出现"半个效果"，详见同仓库 README。
-   ----------------------------------------------------------------------------
-   ℹ 本主题不在官方社区主题列表里（更新检查按文件夹名匹配，匹配不上）→
-     不会收到"上游更新"，点「更新主题」也不会把它拉回原版 Blue Topaz。
-     唯独底子 Blue Topaz 自己发新版时，需手动重跑合并（见 overlay.src.css）。
+   本文件含第三方主题底子；其原始版权与 MIT 许可声明保留在下方。
    ============================================================================ */
 
 /* 
@@ -30474,58 +30460,12 @@ body.notebook-navigator-support.theme-dark {
 /* ↓↓↓ Hadesr UI 覆盖层 开始 ↓↓↓ */
 
 /* ============================================================================
-   Hadesr UI —— 覆盖层源码（overlay source）     本文件不被 Obsidian 加载
-   ----------------------------------------------------------------------------
-   成品关系：   theme.css  =  文件头  +  Blue Topaz theme.css  +  本文件内容
-   Obsidian 只读同目录的 theme.css 与 manifest.json，因此本文件可安心留在这里，
-   随主题文件夹一起被拷到别的电脑 —— 改外观就改本文件，改完按下面命令重合并。
-   ----------------------------------------------------------------------------
-   ★ 与插件的绑定关系（Hadesr Code v2.26.0+，两件套请一起拷贝、联动使用）
-     · 本主题提供「结构」：引用块 4px 竖条（blockquote::before）、底色、段落级强制换行、
-       引用内列表缩进、行内代码红字灰底、分割线细线、任务清单已完成项删除线、
-       去掉底子主题的代码块装饰。
-     · 本主题提供「明暗适配」：上述这几项的**颜色**都按 theme-light / theme-dark 切换
-       （v1.5.0 起）。代码块不在此列 —— 它自带 9 套配色，刻意与明暗解耦。
-     · 插件提供「换色」：「设置 → 外观样式 → 引用块颜色」5 档（暖金 / 浅蓝 / 青绿 /
-       珊瑚红 / 暖灰），每档**浅色/深色各一套值**（深色用半透明叠色），
-       通过 --blockquote-border-color 与门控 CSS 覆盖本主题默认色。
-     · 只装主题、不装插件 → 引用块颜色固定为默认档，无法切换（下拉由插件提供）。
-     · 只装插件、不装主题 → 阅读视图引用块没有竖条可上色（那条 ::before 由本主题画）。
-   ----------------------------------------------------------------------------
-   重合并命令（改完本文件后执行）—— 用仓库里的工具，别手写切分脚本：
-
-     python3 <仓库>/theme-src/rebuild-theme.py
-
-   工具按**自身所在位置**推算仓库根，从仓库内的底子原件
-   （theme-src/base-Blue-Topaz.css）重新完整拼一遍 ——
-   每次输出都由同一套确定输入算出，不依赖 theme.css 的现状，也不依赖任何桌面目录。
-   ⚠ 不要写"按首行标记切一刀再拼"的脚本：底子主题的第一行同样是 `/* =====…`，
-     切点会命中 index 0 → theme.css 被截成只剩覆盖层（2026-10-16 真踩过）。
-
-   校验：脚本重建时会自检花括号配平（当前 底子 3409 + 覆盖 66 = 3475），
-        重载 Obsidian 目视确认即可。
+   Hadesr UI —— 覆盖层源码（Obsidian 不加载本文件）
+   作者: Hadesr
    ============================================================================ */
 
-/* ============================================================
-   Hadesr UI  v1.5.0     配套插件：Hadesr Code v2.26.0+
-   ------------------------------------------------------------
-   覆盖内容：
-   1) 去掉底子主题自带的代码块装饰（语言标签 / 边框 / 阴影），交给插件
-   2) 引用块：底色 + 左侧 4px 竖条 + 强制换行（颜色由插件下拉控制，见上方绑定说明）
-   3) 行内代码：红字 + 灰底（主题独有，插件无此项控件）
-   4) 分割线：细灰线（主题独有）
-   5) 任务清单：已完成项（`- [x]`）加删除线（v1.4.0 从独立 CSS 片段并入主题）
-   ------------------------------------------------------------
-   ★ v1.5.0 明暗适配：引用块底色/字色、行内代码字色、分割线颜色
-     全部改成**按明暗切换的变量**（见下面 body / .theme-dark 两块），不再写死浅色 ——
-     以前深色模式下引用块会变成"暗界面上一块亮粉底"。
-     注意选择器写法：变量放在 `.theme-dark` 作用域即可；
-     插件那边的门控要用 `body.theme-dark.cs-qbar-x`（theme-dark 类挂在 <body> 上，
-     写成 `.theme-dark body.cs-qbar-x` 会永远匹配不到）。
-   ============================================================ */
-
 /* ---------- 1) 代码块：去掉主题装饰，避免与 Hadesr Code 冲突 ---------- */
-/* 语言大写标签（pre::before 伪元素，Blue Topaz 15060 起） */
+/* 语言大写标签（pre::before 伪元素） */
 body:not(.remove-language-type) pre::before,
 .markdown-rendered pre::before,
 .markdown-preview-view pre::before {
@@ -30541,13 +30481,8 @@ body:not(.remove-language-type) pre::before,
 }
 
 /* ---------- 2) 引用块：默认底色 + 左侧 4px 竖条 ----------
-   竖条颜色由 Hadesr Code「设置 → 外观样式 → 引用块颜色」下拉控制
-   （插件注入 body.cs-qbar-* 门控 CSS 覆盖这里的默认色，这里只画条）。
-
-   ★ 明暗适配（v1.5.0）：底色与字色**按主题明暗切换**，不再写死浅色 ——
-     写死浅色时，深色模式下会变成"暗界面上一块亮粉底"。
-     变量放 body / .theme-dark 两个作用域；插件换色只改竖条与底色，
-     深色模式的**字色**由下面 .theme-dark 那条兜住（否则深色底 + #333 深字 = 看不清）。 */
+   竖条颜色由 Hadesr Code 的「引用块颜色」控制；这里只画结构。
+   底色 / 字色按明暗切换，避免深色模式下看不清。 */
 body {
   --cbs-qbar-bg: #fdefee;                 /* 默认档（暖金）浅色底 */
   --cbs-qbar-fg: #333333;
@@ -30657,13 +30592,7 @@ body {
 }
 
 /* ---------- 5) 任务清单：已完成项加删除线 ----------
-   勾选完成的任务（`- [x]`）在【阅读视图】与【实时预览】里都显示划线；
-   未完成的 `- [ ]` 不受影响。
-   ★ 这条**原先是一个独立 CSS 片段**（.obsidian/snippets/task-strikethrough.css），
-     现并入主题 —— 目的是「只维护主题一件事」：换电脑 / 给别人时不必再单独拷片段，
-     也不会出现"装了主题却没有删除线"的错位。
-   想改划线颜色：改下面的 --ts-line-color（默认跟"已完成的灰字"同色；
-   想更醒目可写 #f1b024 之类）。 */
+   已完成（`- [x]`）显示划线，未完成不受影响；颜色由 --ts-line-color 控制。 */
 body {
   --ts-line-color: var(--text-faint);
 }
@@ -30689,8 +30618,7 @@ li.task-list-item[data-task="X"],
    标记：`--cbs-code-ct: 1` 告诉插件"本主题已提供配色"，插件据此决定是否自己兜底注入。
    ============================================================================ */
 
-/* 默认配色 = 用户当前选择（monokai）。插件关闭/未加载时，代码块就用这套；
-   插件在时由 body.cbs-code-theme-<id> 覆盖。想换默认就改这一行。 */
+/* 默认配色：插件关闭 / 未加载时使用；插件在时由 body.cbs-code-theme-<id> 覆盖。 */
 body { --cbs-code-ct: 1; --code-background: #272822; --background-code: #272822; --code-block-background: #272822; --code-normal: #f8f8f2; --code-head: #1f2018; --code-border: #1a1b16; --code-keyword: #f92672; --code-string: #e6db74; --code-value: #ae81ff; --code-comment: #75715e; --code-function: #a6e22e; --cbs-vr: #f8f8f2; --cbs-ty: #66d9ef; --code-operator: #f92672; --code-tag: #f92672; --cbs-at: #a6e22e; --cbs-pr: #a6e22e; --cbs-mt: #75715e; --code-important: #f92672; --code-punctuation: #f92672;  }
 
 /* ── 配色数据 ─────────────────────────────────────────────── */
@@ -30721,13 +30649,7 @@ body.cbs-code-theme-solarized-light { --code-background: #fdf6e3; --background-c
   padding: 0 !important; margin: 0 !important; min-height: 0 !important;
   border-radius: 0 !important; box-shadow: none !important;
 }
-/* 代码块字号：让编辑态与阅读态**完全一致**（v1.3.2）。
-   Obsidian 的规则是：编辑态代码块用正文字号 --font-text-size（默认 16px），
-   阅读态代码块却用 --code-size，而它默认 = --font-smaller = 正文的 0.875 倍（≈14px）。
-   这就是「编辑 / 阅读两块字号不一样」的根因 —— 之前只给 pre 写死 16px，改不到 code 那一层。
-   治本：把 --code-size 对齐正文，再显式把 pre/code 两层都指向它。
-   好处：默认两边都 16px；用户日后调 Obsidian「字体大小」滑块时，编辑/阅读一起变，始终一致。
-   （行内代码也用 --code-size，一并统一到正文，不再显得偏小。） */
+/* 代码块字号：编辑态与阅读态统一到 --code-size，随正文字号一起变。 */
 body { --code-size: var(--font-text-size); }
 .markdown-rendered pre, .markdown-preview-view pre,
 .markdown-rendered pre code, .markdown-preview-view pre code,
@@ -30790,13 +30712,8 @@ body, .markdown-source-view.mod-cm6 {
 .token.punctuation { color: var(--code-operator) !important; }
 .token.selector { color: var(--code-tag) !important; }
 
-/* http / REST：显式类名（我们的阅读态接管 + Prism http 语法都会用到；
-   别名 property/url/number/string 其实已覆盖，这里只是双保险）。
-   v1.3.2：Obsidian 的 Prism 构建里没有 http 语法 → 阅读态的 ```http 块会 fallback 到
-   clike / C 去高亮（用户原话「编辑是 http，阅读走 c 语言」）。现在由插件 Hadesr Code v2.25.3 的
-   httpHighlight() 接管（fence 是 http 家族无条件接管，否则按内容嗅探），这里把每条 token
-   拆成**互不相同**的颜色，一眼能分辨：
-     方法=函数色 / 路径=类型色(青) / 版本=注释色(弱化) / 头名=属性色 / 头值·短语=字符串色 / 状态码=数值色 */
+/* http / REST：Obsidian Prism 无 http 语法，由插件接管着色；
+   这里把 token 拆成不同颜色，便于分辨。 */
 .token.request-target { color: var(--cbs-ty) !important; }
 .token.http-version { color: var(--code-comment) !important; }
 .token.header-name { color: var(--cbs-at) !important; }

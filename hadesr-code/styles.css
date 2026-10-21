@@ -1,7 +1,7 @@
 /* ============================================================
- * Hadesr Code — 工具条 + ⋯菜单 + 表格工具栏样式
- * 说明：绝不设置代码行的 font-size / line-height（会打乱 CM6 行高 → 错行）
+ * Hadesr Code — 工具条 / ⋯ 菜单 / 表格工具栏
  * 作者: Hadesr
+ * 约束：不改代码行的 font-size / line-height。
  * ============================================================ */
 
 /* ---------- 工具条 ---------- */
@@ -197,30 +197,6 @@
 .cbs-bar[data-theme="yuque-dark"], .cbs-menu[data-theme="yuque-dark"] { --cbs-head:#171717; --cbs-fg:#d4d4d4; --cbs-border:#2a2a2a; --cbs-sel:rgba(255,255,255,.13); }
 .cbs-bar[data-theme="yuque-light"], .cbs-menu[data-theme="yuque-light"] { --cbs-head:#ebecee; --cbs-fg:#24292f; --cbs-border:#e2e5e8; --cbs-sel:rgba(0,0,0,.07); }
 
-/* ---------- 「隐藏全部标题栏」后的恢复按钮（右下角常驻） ---------- */
-.cbs-chip {
-  position: fixed;
-  right: 18px;
-  bottom: 18px;
-  z-index: var(--layer-popover, 30);
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  height: 32px;
-  padding: 0 13px;
-  border: 1px solid var(--background-modifier-border, rgba(127, 127, 127, .3));
-  border-radius: 999px;
-  background: var(--background-secondary, #2a2e35);
-  color: var(--text-normal, #ddd);
-  font-family: var(--font-interface);
-  font-size: 12.5px;
-  line-height: 1;
-  cursor: pointer;
-  box-shadow: 0 8px 24px -10px rgba(0, 0, 0, .5);
-}
-.cbs-chip:hover { border-color: var(--interactive-accent, #2f7bff); }
-.cbs-chip svg { width: 14px; height: 14px; opacity: .75; }
-
 /* ---------- 工具条左侧的「N 行」 ---------- */
 .cbs-lc {
   flex: 1 1 auto;
@@ -240,11 +216,7 @@
 .markdown-rendered pre code,
 .markdown-preview-view pre code,
 .cm-preview-code-block pre code { counter-reset: cbsrln; }
-/* v2.25.2 定稿：行号独立一列、数字居中、竖线。
-   「列宽 + 右间隔」= 2.2em + 1.55em = 3.75em。旧版是 2.6em + .7em = 3.3em；
-   这里加长的 0.45em 是为了抵消卡片 padding-left 从 8px 收到 4px（见 main.js 的
-   applyReadingTheme）——两者相抵，**代码本身的位置和边距完全没变**，
-   只是数字在自己的列里更靠左、更居中（用户要求：离左侧边窄一点、那一列居中、别动代码边距）。 */
+/* 阅读/预览态行号：独立一列、数字居中、竖线；不改变代码本身的边距。 */
 .cbs-rln::before {
   counter-increment: cbsrln;
   content: counter(cbsrln);
@@ -272,8 +244,7 @@
 .cbs-rln-sp { display: inline-block; width: .6em; }
 .cbs-rln-c { display: inline; white-space: pre; }
 
-/* 我们自己的「语言标记 = 复制」胶囊（阅读/实时预览卡片，右上角；点它即复制）。
-   v2.17.3：用户换回默认主题（Blue Topaz 那个 pre::before 标签已不存在），复制回到右侧、用语言名做标签。 */
+/* 语言名胶囊：阅读/实时预览卡片右上角，点击复制。 */
 .cbs-flair {
   position: absolute; top: 4px; right: 6px; z-index: 3;
   padding: 1px 8px; border-radius: 999px;
@@ -293,7 +264,7 @@
 }
 .cbs-flair:hover { opacity: 1; }
 
-/* 上一版（v2.17.2）的左上角复制图标按钮：彻底隐藏兜底（JS 也会移除遗留节点） */
+/* 遗留的左上角复制图标按钮：隐藏兜底 */
 .cbs-copy { display: none !important; }
 
 /* 隐藏 Obsidian 原生语言角标（.code-block-flair，只存在于实时预览）——
@@ -312,3 +283,48 @@
 .markdown-source-view button.copy-code-button,
 .markdown-source-view .edit-block-button,
 .markdown-preview-view .edit-block-button { display: none !important; }
+
+/* ---------- 设置页：一级目录 + 二级页 ---------- */
+.cbs-settings .cbs-head { text-align: center; padding: 14px 0 18px; }
+.cbs-settings .cbs-logo {
+  font-size: 28px; font-weight: 800; letter-spacing: .5px;
+  color: var(--text-accent); cursor: pointer; user-select: none;
+  transition: filter .2s ease, transform .15s ease;
+}
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .cbs-settings .cbs-logo {
+    background: linear-gradient(135deg, var(--text-accent), var(--text-accent-hover, var(--text-accent)));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+.cbs-settings .cbs-logo:hover { filter: hue-rotate(35deg) brightness(1.15); transform: scale(1.03); }
+.cbs-settings .cbs-meta { color: var(--text-muted); font-size: .82em; margin-top: 4px; }
+.cbs-settings .cbs-hint { color: var(--text-faint); font-size: .78em; margin-top: 3px; }
+
+.cbs-settings .cbs-nav-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 10px; border-radius: 8px; cursor: pointer;
+}
+.cbs-settings .cbs-nav-row:hover { background: var(--background-modifier-hover); }
+.cbs-settings .cbs-nav-icon { display: flex; align-items: center; color: var(--text-accent); }
+.cbs-settings .cbs-nav-text { flex: 1; min-width: 0; }
+.cbs-settings .cbs-nav-name { font-weight: 600; }
+.cbs-settings .cbs-nav-desc {
+  color: var(--text-muted); font-size: .82em; margin-top: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cbs-settings .cbs-nav-arrow { display: flex; color: var(--text-faint); }
+
+.cbs-settings .cbs-back {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 0 10px; cursor: pointer; color: var(--text-muted);
+}
+.cbs-settings .cbs-back:hover { color: var(--text-normal); }
+.cbs-settings .cbs-back-icon { display: flex; }
+.cbs-settings .cbs-back-title { font-weight: 600; color: var(--text-normal); }
+
+@media (max-width: 600px) {
+  .cbs-settings .cbs-nav-row { padding: 14px 8px; }
+  .cbs-settings .cbs-nav-desc { white-space: normal; }
+}

@@ -4,8 +4,8 @@
 
 | 资产 | 名字 | 版本 | 干什么的 |
 |---|---|---|---|
-| 插件 | **Hadesr Code** | `v2.29.3` | 代码块工具栏（语言 / 主题 / 复制 / 下载 / 行号）、代码块配色与字体、**自定义正则高亮**、表格工具栏（含**复制表格**）、表格列宽拖拽、引用块换色档位、表格配色档位、**主题外观（整体配色 / 文件树 / 代码块，共 20 项）** |
-| 主题 | **Hadesr UI** | `v1.5.0` | 代码块 / 表格 / 引用块的整套观感，**任务清单已完成项删除线**，**明暗双模式适配**，**基于 Blue Topaz 精简改造** |
+| 插件 | **Hadesr Code** | `v2.30.0` | 代码块工具栏（语言 / 主题 / 复制 / 下载 / 行号，可整体隐藏）、代码块配色与字体、**自定义正则高亮**、表格工具栏（含**复制表格**）、表格列宽拖拽、引用块换色档位、表格配色档位、**主题外观（整体配色 / 文件树 / 代码块，共 20 项）** |
+| 主题 | **Hadesr UI** | `v1.5.0` | 代码块 / 表格 / 引用块的整套观感，**任务清单已完成项删除线**，**明暗双模式适配** |
 
 ---
 
@@ -186,39 +186,7 @@ cp -R "Hadesr UI/."        "$VAULT/.obsidian/themes/Hadesr UI/"
 
 然后在 Obsidian 里**重载**：`Ctrl/Cmd + R`，或到设置里把插件关掉再打开。
 
-> 插件版本会显示在 **设置 → Hadesr Code** 的标题上（例如 `Hadesr Code 设置 v2.29.3`）—— 一眼就能看出这台是不是旧的。
-
----
-
-## 目录结构
-
-```
-CodeUI-Ob/
-├─ README.md                  ← 本文件
-├─ LICENSE                    ← MIT（含 Blue Topaz 署名）
-├─ hadesr-code/               ← 插件本体（= Obsidian 插件目录里的内容）
-│  ├─ main.js
-│  ├─ styles.css
-│  ├─ manifest.json
-│  └─ versions.json
-├─ Hadesr UI/                 ← 主题（= Obsidian 主题目录里的内容）
-│  ├─ manifest.json
-│  ├─ theme.css               ← 成品（底子 + 覆盖层合并，约 1.29 MB）
-│  └─ overlay.src.css         ← 覆盖层源码（改样式改这里）
-├─ docs/                      ← README 里的配图
-│  ├─ preview-overview.png
-│  └─ preview-themes.png
-└─ theme-src/                 ← 主题重建原料（只给"要改主题"的人用）
-   ├─ base-Blue-Topaz.css     ← Blue Topaz 底子（原样留档，别再动它）
-   └─ rebuild-theme.py        ← 一键重合并：底子 + overlay.src.css → theme.css
-```
-
-> **仓库一级的每个文件夹 = 拷进 vault 的一份东西**：
-> `hadesr-code/` → `<vault>/.obsidian/plugins/hadesr-code/`；
-> `Hadesr UI/` → `<vault>/.obsidian/themes/Hadesr UI/`。
-> （`docs/` 与 `theme-src/` 是仓库自用，不往 vault 里拷。）
-
-> **不进仓库的东西**：插件目录里的 `data.json` —— 那是每台机器各自的设置（代码主题选择、引用块档位、表格档位、列宽记忆），由 Obsidian 自动生成。
+> 插件版本会显示在 **设置 → Hadesr Code** 的标题上（例如 `Hadesr Code 设置 v2.30.0`）—— 一眼就能看出这台是不是旧的。
 
 ---
 
