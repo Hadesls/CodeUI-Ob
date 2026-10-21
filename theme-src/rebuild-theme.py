@@ -19,8 +19,8 @@ Hadesr UI —— theme.css 重合并工具（确定性重建版）
 """
 import io, os, sys, json
 
-HERE = os.path.dirname(os.path.abspath(__file__))          # …/Code-UI/theme-src
-ROOT = os.path.dirname(HERE)                               # …/Code-UI
+HERE = os.path.dirname(os.path.abspath(__file__))          # …/CodeUI-Ob/theme-src
+ROOT = os.path.dirname(HERE)                               # …/CodeUI-Ob
 DEF_THEME = os.path.join(ROOT, "Hadesr UI")                # 主题目录（含 overlay.src.css）
 # ↑ 主题目录就放在仓库一级（2026-10-16 从 `themes/Hadesr UI` 提出来的）——
 #   这样「仓库一级的每个文件夹 = 拷进 vault 的一份东西」，和 hadesr-code/ 对称。

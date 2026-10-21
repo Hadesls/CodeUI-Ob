@@ -1,4 +1,4 @@
-# Code-UI
+# CodeUI-Ob
 
 > Obsidian 两件套：**代码块 / 表格增强插件** + **配套界面主题**。放这个仓库，方便多台电脑用 `git pull` 保持同步。
 
@@ -193,16 +193,14 @@ cp -R "Hadesr UI/."        "$VAULT/.obsidian/themes/Hadesr UI/"
 ## 目录结构
 
 ```
-Code-UI/
+CodeUI-Ob/
 ├─ README.md                  ← 本文件
 ├─ LICENSE                    ← MIT（含 Blue Topaz 署名）
 ├─ hadesr-code/               ← 插件本体（= Obsidian 插件目录里的内容）
 │  ├─ main.js
 │  ├─ styles.css
 │  ├─ manifest.json
-│  ├─ versions.json
-│  └─ tools/
-│     └─ static-check.js      ← 改完 main.js 跑一下：确认 this.* 调用的方法都有定义
+│  └─ versions.json
 ├─ Hadesr UI/                 ← 主题（= Obsidian 主题目录里的内容）
 │  ├─ manifest.json
 │  ├─ theme.css               ← 成品（底子 + 覆盖层合并，约 1.29 MB）
@@ -233,29 +231,20 @@ Code-UI/
 ① 在 vault 里改插件 / 主题覆盖层（就地改，马上能看到效果）
 ② 升版本号（插件 manifest + 主题 manifest + overlay 抬头，另加 versions.json）
 ③ 重合并主题成品（改过 overlay.src.css 才需要）：python3 theme-src/rebuild-theme.py
-④ 把改动同步到本仓库目录（vault → Code-UI，单向）
-⑤ 推送：push-via-api-retry.js（见下方「怎么推」）
+④ 把改动同步到本仓库目录（vault → CodeUI-Ob，单向）
+⑤ 推送：`git add -A && git commit -m "..." && git push`
 ⑥ 别的电脑：git pull → 两条 cp 覆盖 → 重载 Obsidian
 ```
 
-### 怎么推
-
-沙箱 / 受限网络里 `github.com` 走不通（`git push` 必 502），但 `api.github.com` 通。
-用 `gh` 拿 token，再走 REST API 推：
+### 推送
 
 ```bash
-export PATH="$HOME/bin:$PATH"
-cd /path/to/CodeUI-Ob                     # 仓库工作目录
-SRC="$PWD" \
-MESSAGE="feat: xxx（v2.29.3）" \
-GH_TOKEN=$(gh auth token) \
-node "$HOME/bin/push-via-api-retry.js" Hadesls/CodeUI-Ob main
+git add -A
+git commit -m "feat: xxx（v2.29.3）"
+git push
 ```
 
-> `push-via-api-retry.js` 带指数退避重试（网络抖动会自动重试），
-> 且**文本文件走 utf-8 直传**（省掉 base64 的 33% 体积）。
-
-> 更细的说明（含主题"底子 + 覆盖层"的合并原理、重建步骤）见配套文档 **《Code-UI 打包与维护方案》**。
+> 开发与测试脚本不随仓库发布，仓库只含运行所需文件。
 
 ---
 
