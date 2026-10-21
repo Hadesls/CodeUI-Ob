@@ -222,32 +222,6 @@ CodeUI-Ob/
 
 ---
 
-## 开发 / 维护
-
-**同步方向永远是单向**：本地 vault 是「开发机」，本仓库是「发行版」。
-不要反向改仓库再拷回 vault，否则两边内容会飘。
-
-```
-① 在 vault 里改插件 / 主题覆盖层（就地改，马上能看到效果）
-② 升版本号（插件 manifest + 主题 manifest + overlay 抬头，另加 versions.json）
-③ 重合并主题成品（改过 overlay.src.css 才需要）：python3 theme-src/rebuild-theme.py
-④ 把改动同步到本仓库目录（vault → CodeUI-Ob，单向）
-⑤ 推送：`git add -A && git commit -m "..." && git push`
-⑥ 别的电脑：git pull → 两条 cp 覆盖 → 重载 Obsidian
-```
-
-### 推送
-
-```bash
-git add -A
-git commit -m "feat: xxx（v2.29.3）"
-git push
-```
-
-> 开发与测试脚本不随仓库发布，仓库只含运行所需文件。
-
----
-
 ## 许可
 
 **MIT License** —— 详见 [LICENSE](LICENSE)。
