@@ -260,29 +260,18 @@ body, .markdown-source-view.mod-cm6 {
 .token.status-code { color: var(--code-value) !important; }
 
 /* ============================================================================
-   Obsidian 1.15+ Pele Mermaid 兼容层
+   Obsidian 1.15+ Mermaid（Pele）— 只用官方变量
    ----------------------------------------------------------------------------
-   Pele 用 --pele-* 变量和 .pele-* 类，旧的 .mermaid .node/.label 规则不再匹配。
-   这里把 Pele 的颜色/字体/圆角接回 Hadesr UI 的现有变量。
+   1.15 起 Mermaid 由 Pele 渲染，官方对外暴露的主题接口是 --mermaid-* 变量：
+     body, .mermaid { --pele-bg: var(--mermaid-background); ... }
+   Pele 再把它们派生为内部的 --pele-*。所以这里只覆盖 --mermaid-*，
+   不直接写 --pele-*，也不碰 .pele-node / .pele-label 等内部类。
+   官方默认值本来已指向 --background-primary / --text-normal / --interactive-accent，
+   这里只保留两处与默认不同的：圆角更明显、次表面色用 secondary-alt。
    ============================================================================ */
-.pele {
-  --pele-bg: var(--background-primary);
-  --pele-fg: var(--text-normal);
-  --pele-fg-on-light: var(--text-normal);
-  --pele-fg-on-dark: var(--text-on-accent);
-  --pele-muted: var(--text-muted);
-  --pele-line: var(--text-normal);
-  --pele-surface: var(--background-secondary);
-  --pele-surface-alt: var(--background-secondary-alt);
-  --pele-border: var(--background-modifier-border);
-  --pele-accent: var(--interactive-accent);
-  --pele-critical: var(--text-error);
-  --pele-font: var(--font-text);
-  --pele-font-mono: var(--font-monospace);
-  --pele-title-weight: 700;
-  --pele-heading-weight: 650;
-  --pele-bold-weight: 700;
-  --pele-radius: var(--radius-m);
+body, .mermaid {
+  --mermaid-radius: var(--radius-m);
+  --mermaid-surface-alt: var(--background-secondary-alt);
 }
 
 /* ============================================================================
